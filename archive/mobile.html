@@ -187,70 +187,55 @@
   #yt-dock.collapsed #yt-frame { display: none; }
   #yt-dock.collapsed { border-bottom: none; }
 
-  /* Push input above tiiny.host footer ad on mobile */
+  /* ── Quick-action button panel ─────────────────────────── */
+  #btn-panel {
+    background: #001200;
+    border-top: 1px solid #003300;
+    padding: 6px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-shrink: 0;
+    align-items: flex-start;
+    align-content: flex-start;
+    min-height: 52px;
+  }
+  .game-btn {
+    background: transparent;
+    border: 1px solid #00aa22;
+    color: #00cc33;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 7px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.3;
+  }
+  .game-btn:hover  { background: #002200; color: #00ff41; border-color: #00ff41; }
+  .game-btn:active { background: #003300; }
+  .game-btn.btn-primary   { border-color: #00ff41; color: #00ff41; }
+  .game-btn.btn-event     { border-color: #ff6600; color: #ff6600; animation: blink 0.8s step-end infinite; }
+  .game-btn.btn-choice    { border-color: #00ccff; color: #00ccff; }
+  .game-btn.btn-sell      { border-color: #00ffaa; color: #00ffaa; }
+  .game-btn.btn-beer      { border-color: #ffcc00; color: #ffcc00; }
+  .game-btn.btn-back      { border-color: #444;    color: #555;    font-size: 12px; }
+  .game-btn.btn-listing   { border-color: #009900; color: #00bb22; text-align: left; }
+  .game-btn.btn-buy       { border-color: #00ffaa; color: #00ffaa; }
+  .game-btn.btn-negotiate { border-color: #ffdd00; color: #ffdd00; }
+  .game-btn.btn-lowball   { border-color: #ff6600; color: #ff6600; }
+  .game-btn.btn-next      { border-color: #444;    color: #666;    }
   @media (max-width: 768px) {
-    #input-area {
-      padding-bottom: calc(8px + 62px + env(safe-area-inset-bottom, 0px));
-    }
+    .game-btn { font-size: 15px; padding: 11px 16px; }
+    #btn-panel { padding: 8px; gap: 8px; }
+    #input-area { display: none; }
   }
 
-  #mobile-warning {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.88);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  #mobile-warning.show { display: flex; }
-  #mobile-warning-box {
-    background: #001a00;
-    border: 2px solid #00ff41;
-    padding: 28px 24px;
-    max-width: 380px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 0 30px rgba(0,255,65,0.2);
-  }
-  #mobile-warning-box h2 {
-    font-family: 'VT323', monospace;
-    font-size: 28px;
-    color: #00ff41;
-    margin-bottom: 14px;
-  }
-  #mobile-warning-box p {
-    color: #00cc33;
-    font-size: 16px;
-    line-height: 1.6;
-    margin-bottom: 20px;
-  }
-  #mobile-warning-box p span { color: #ffdd00; }
-  #mobile-warning-btn {
-    background: transparent;
-    border: 1px solid #00ff41;
-    color: #00ff41;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 16px;
-    padding: 10px 22px;
-    cursor: pointer;
-    width: 100%;
-  }
-  #mobile-warning-btn:hover { background: #002200; }
 </style>
 </head>
 <body>
-
-<div id="mobile-warning">
-  <div id="mobile-warning-box">
-    <h2>⚠ DESKTOP RECOMMENDED ⚠</h2>
-    <p>Marketplace Hustle is best played on a <span>desktop or laptop</span> with a real keyboard.</p>
-    <p>On mobile, the ASCII art may look rough and typing commands gets old fast. The hustle deserves better.</p>
-    <p>You can still play — just know it won't be the full experience.</p>
-    <button id="mobile-warning-btn" onclick="document.getElementById('mobile-warning').classList.remove('show')">I'LL PLAY ANYWAY</button>
-  </div>
-</div>
 
 <div id="status-bar">
   <div class="stat">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
@@ -262,6 +247,8 @@
 </div>
 
 <div id="output"></div>
+
+<div id="btn-panel"></div>
 
 <div id="yt-dock">
   <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK — CLICK TO PLAY</div>
@@ -1852,6 +1839,89 @@ function cmdDeveloper() {
 }
 
 // ============================================================
+//  BUTTON PANEL
+// ============================================================
+let btnCtx = { mode: 'default', selectedListing: null };
+
+function addBtn(panel, label, cmd, cls, clickFn) {
+  const b = document.createElement('button');
+  b.className = 'game-btn' + (cls ? ' ' + cls : '');
+  b.innerHTML = label;
+  b.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (clickFn) { clickFn(); return; }
+    if (cmd) processCommand(cmd);
+  });
+  panel.appendChild(b);
+}
+
+function renderButtons() {
+  const panel = document.getElementById('btn-panel');
+  if (!panel) return;
+  panel.innerHTML = '';
+
+  if (G.phase === 'over') return;
+
+  // Pending events take full priority
+  if (G.pendingEvent) {
+    const e = G.pendingEvent;
+    if (e.type === 'griffin') {
+      addBtn(panel, '🐕 CALM GRIFFIN', 'calm', 'btn-event');
+    } else if (e.type === 'tswam') {
+      addBtn(panel, '🤝 DEAL WITH T-SWAN', 'deal', 'btn-event');
+    } else if (e.type === 'fireworks') {
+      e.opts.forEach((idx, i) => {
+        addBtn(panel, `ANSWER ${i+1}`, `answer ${i+1}`, 'btn-choice');
+      });
+    } else if (e.type === 'rally') {
+      addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
+    }
+    return;
+  }
+
+  // Listing-action sub-mode: pick buy / negotiate / lowball for a specific item
+  if (btnCtx.mode === 'listing-action' && btnCtx.selectedListing !== null) {
+    const item = G.listings[btnCtx.selectedListing];
+    if (item) {
+      const n = btnCtx.selectedListing + 1;
+      addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy');
+      addBtn(panel, `🤝 NEGOTIATE`, `negotiate ${n}`, 'btn-negotiate');
+      addBtn(panel, `📉 LOWBALL`, `lowball ${n}`, 'btn-lowball');
+      addBtn(panel, '← BACK', null, 'btn-back', () => {
+        btnCtx.mode = 'listings'; btnCtx.selectedListing = null; renderButtons();
+      });
+      return;
+    }
+    // Item was removed, fall through to listings
+    btnCtx.mode = 'listings'; btnCtx.selectedListing = null;
+  }
+
+  // Listings mode: one button per available listing
+  if (btnCtx.mode === 'listings' && G.listings.length > 0) {
+    G.listings.forEach((item, i) => {
+      addBtn(panel, `${item.emoji} ${item.name}  $${money(item.askPrice)}`, null, 'btn-listing', () => {
+        btnCtx.mode = 'listing-action';
+        btnCtx.selectedListing = i;
+        renderButtons();
+      });
+    });
+    addBtn(panel, '← BACK', null, 'btn-back', () => {
+      btnCtx.mode = 'default'; renderButtons();
+    });
+    return;
+  }
+
+  // Default mode
+  addBtn(panel, '🔍 BROWSE', 'browse', 'btn-primary');
+  if (G.inventory.length > 0) addBtn(panel, '💸 SELL ALL', 'sell', 'btn-sell');
+  if (G.budLights > 0)        addBtn(panel, '🍺 RECHARGE', 'recharge', 'btn-beer');
+  if (G.budLights <= 3)       addBtn(panel, '🏪 RESTOCK', 'restock', '');
+                              addBtn(panel, '📋 PREP', 'prep', '');
+  if (G.week >= 2)            addBtn(panel, '🛴 SCOOT', 'scoot', '');
+                              addBtn(panel, '⏭ NEXT WEEK', 'next', 'btn-next');
+}
+
+// ============================================================
 //  INPUT HANDLER
 // ============================================================
 function processCommand(raw) {
@@ -1940,6 +2010,18 @@ function processCommand(raw) {
       ];
       print(pick(unknowns), 'error');
   }
+
+  // Update button context based on what command ran
+  const _browseAliases = ['browse','scroll','b','marketplace','fb','search'];
+  const _buyAliases    = ['buy','purchase','get','negotiate','counter','offer','lowball','lb','lowbll'];
+  if (_browseAliases.includes(cmd)) {
+    btnCtx = { mode: 'listings', selectedListing: null };
+  } else if (_buyAliases.includes(cmd)) {
+    btnCtx = { mode: G.listings.length > 0 ? 'listings' : 'default', selectedListing: null };
+  } else {
+    btnCtx = { mode: 'default', selectedListing: null };
+  }
+  renderButtons();
 }
 
 // ── YouTube soundtrack ──────────────────────────────────────
@@ -1964,9 +2046,13 @@ document.addEventListener('keydown', function startMusic() {
   document.removeEventListener('keydown', startMusic);
 }, { once: true });
 
-// Keep input focused — clicking anywhere refocuses it
-document.addEventListener('click', () => document.getElementById('cmd-input').focus());
-document.getElementById('cmd-input').focus();
+// Focus input on desktop; skip on mobile where it's hidden
+if (window.innerWidth > 768) {
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('game-btn')) document.getElementById('cmd-input').focus();
+  });
+  document.getElementById('cmd-input').focus();
+}
 
 const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer'];
 
@@ -2046,16 +2132,13 @@ function intro() {
     print('  Type <strong>help</strong> for commands. Type <strong>browse</strong> to start scrolling deals.', 'choice');
     printBlank();
     updateStatus();
+    renderButtons();
     out.scrollTop = 0;
   }, 400);
 }
 
 intro();
 
-// Mobile warning
-if(window.innerWidth < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  document.getElementById('mobile-warning').classList.add('show');
-}
 </script>
 </body>
 </html>
