@@ -86,7 +86,7 @@
     border-top: 1px solid #00ff41;
     background: #001a00;
     padding: 8px 12px;
-    display: flex;
+    display: none;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
@@ -173,6 +173,15 @@
     background: #000;
     box-shadow: 0 0 8px rgba(0,255,65,0.3);
   }
+  @media (max-width: 768px) {
+    #yt-dock {
+      position: static;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      box-shadow: none;
+    }
+  }
   #yt-label {
     font-family: 'VT323', monospace;
     font-size: 16px;
@@ -184,73 +193,83 @@
   }
   #yt-label:hover { background: #001a00; }
   #yt-frame { display: block; }
-  #yt-dock.collapsed #yt-frame { display: none; }
+  #yt-dock.collapsed #yt-frame { height: 0; }
   #yt-dock.collapsed { border-bottom: none; }
 
-  /* Push input above tiiny.host footer ad on mobile */
+  /* ── Quick-action button panel ─────────────────────────── */
+  #btn-panel {
+    background: #001200;
+    border-top: 1px solid #003300;
+    padding: 6px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-shrink: 0;
+    align-items: flex-start;
+    align-content: flex-start;
+    min-height: 52px;
+  }
+  .game-btn {
+    background: transparent;
+    border: 1px solid #00aa22;
+    color: #00cc33;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 7px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.3;
+  }
+  .game-btn:hover  { background: #002200; color: #00ff41; border-color: #00ff41; }
+  .game-btn:active { background: #003300; }
+  .game-btn.btn-primary   { border-color: #00ff41; color: #00ff41; }
+  .game-btn.btn-event     { border-color: #ff6600; color: #ff6600; animation: blink 0.8s step-end infinite; }
+  .game-btn.btn-choice    { border-color: #00ccff; color: #00ccff; }
+  .game-btn.btn-sell      { border-color: #00ffaa; color: #00ffaa; }
+  .game-btn.btn-beer      { border-color: #ffcc00; color: #ffcc00; }
+  .game-btn.btn-back      { border-color: #444;    color: #555;    font-size: 12px; }
+  .game-btn.btn-listing   { border-color: #009900; color: #00bb22; text-align: left; }
+  .game-btn.btn-buy       { border-color: #00ffaa; color: #00ffaa; }
+  .game-btn.btn-negotiate { border-color: #ffdd00; color: #ffdd00; }
+  .game-btn.btn-lowball   { border-color: #ff6600; color: #ff6600; }
+  .game-btn.btn-next      { border-color: #444;    color: #666;    }
+  .game-btn.btn-upgrade   { border-color: #ff44ff; color: #ff44ff; animation: blink 0.6s step-end infinite; }
   @media (max-width: 768px) {
-    #input-area {
-      padding-bottom: calc(8px + 62px + env(safe-area-inset-bottom, 0px));
+    /* Status bar: 3-column grid so stats don't stack 4 rows deep */
+    #status-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      font-size: 16px;
+      gap: 2px 6px;
+      padding: 4px 8px;
+    }
+
+    /* Output: clip horizontal overflow from wide box-art lines */
+    #output {
+      overflow-x: hidden;
+      padding: 8px 10px;
+      font-size: 16px;
+    }
+
+    /* ASCII title art is unreadable at phone width — hide it */
+    .ascii-art { display: none; }
+
+    /* Buttons: bigger tap targets, panel capped so it doesn't eat the screen */
+    .game-btn { font-size: 15px; padding: 11px 16px; }
+    #btn-panel {
+      padding: 8px;
+      gap: 8px;
+      max-height: 42vh;
+      overflow-y: auto;
     }
   }
 
-  #mobile-warning {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.88);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  #mobile-warning.show { display: flex; }
-  #mobile-warning-box {
-    background: #001a00;
-    border: 2px solid #00ff41;
-    padding: 28px 24px;
-    max-width: 380px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 0 30px rgba(0,255,65,0.2);
-  }
-  #mobile-warning-box h2 {
-    font-family: 'VT323', monospace;
-    font-size: 28px;
-    color: #00ff41;
-    margin-bottom: 14px;
-  }
-  #mobile-warning-box p {
-    color: #00cc33;
-    font-size: 16px;
-    line-height: 1.6;
-    margin-bottom: 20px;
-  }
-  #mobile-warning-box p span { color: #ffdd00; }
-  #mobile-warning-btn {
-    background: transparent;
-    border: 1px solid #00ff41;
-    color: #00ff41;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 16px;
-    padding: 10px 22px;
-    cursor: pointer;
-    width: 100%;
-  }
-  #mobile-warning-btn:hover { background: #002200; }
 </style>
 </head>
 <body>
-
-<div id="mobile-warning">
-  <div id="mobile-warning-box">
-    <h2>⚠ DESKTOP RECOMMENDED ⚠</h2>
-    <p>Marketplace Hustle is best played on a <span>desktop or laptop</span> with a real keyboard.</p>
-    <p>On mobile, the ASCII art may look rough and typing commands gets old fast. The hustle deserves better.</p>
-    <p>You can still play — just know it won't be the full experience.</p>
-    <button id="mobile-warning-btn" onclick="document.getElementById('mobile-warning').classList.remove('show')">I'LL PLAY ANYWAY</button>
-  </div>
-</div>
 
 <div id="status-bar">
   <div class="stat">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
@@ -261,14 +280,16 @@
   <div class="stat">📦 INVENTORY: <span id="s-inv">0</span> items</div>
 </div>
 
-<div id="output"></div>
-
-<div id="yt-dock">
-  <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK — CLICK TO PLAY</div>
+<div id="yt-dock" class="collapsed">
+  <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK ▶</div>
   <iframe id="yt-frame" width="220" height="124" frameborder="0"
     allow="autoplay; encrypted-media; fullscreen"
     allowfullscreen></iframe>
 </div>
+
+<div id="output"></div>
+
+<div id="btn-panel"></div>
 
 <div id="input-area">
   <div id="prompt-label">MATT&gt;</div>
@@ -510,7 +531,7 @@ function afterAction() {
   if(G.pendingEvent && G.pendingEvent.type === 'griffin') {
     G.biteMeter = Math.min(100, G.biteMeter + rnd(3, 6));
     if(G.biteMeter >= 35) {
-      print(`  🐕 ⚠️  Griffin is still going. Bite risk: ${G.biteMeter}%. Type <strong>calm</strong>.`, G.biteMeter >= 60 ? 'error' : 'event');
+      print(`  🐕 ⚠️  Griffin is still going. Bite risk: ${G.biteMeter}%. Select <strong>calm</strong>.`, G.biteMeter >= 60 ? 'error' : 'event');
     }
     if(Math.random() < G.biteMeter / 450) { griffinBiteGameOver(); return; }
   }
@@ -519,13 +540,13 @@ function afterAction() {
   if(G.pendingEvent && G.pendingEvent.type === 'rally') {
     const bleed = rnd(2, 5);
     G.rallyPrep = Math.max(0, G.rallyPrep - bleed);
-    print(`  📱 That rally question is still sitting there. Prep -${bleed}%. Type <strong>answer</strong>.`, 'event');
+    print(`  📱 That rally question is still sitting there. Prep -${bleed}%. Select <strong>answer</strong>.`, 'event');
   }
 
   // Prep reminder when behind
   if(G.week >= 2 && G.rallyPrep < 45 && G.actionsTaken % 4 === 0) {
     printBlank();
-    print('  ⚠️  Reminder: rally prep is at ' + G.rallyPrep + '%. Type <strong>prep</strong> to work on it.', 'event');
+    print('  ⚠️  Reminder: rally prep is at ' + G.rallyPrep + '%. Select <strong>prep</strong> to work on it.', 'event');
   }
 
   rollRandomEvent();
@@ -667,7 +688,7 @@ function triggerGriffinEvent() {
   print(`🐕  at ${e.target}.`, 'griffin');
   print(`🐕  The whole neighborhood can hear this.`, 'griffin');
   print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
-  print('   Type <strong>calm</strong> to attempt to calm Griffin down.', 'choice');
+  print('   Select <strong>calm</strong> to attempt to calm Griffin down.', 'choice');
   print('   (Results may vary. They will vary. Downward.)', 'dim');
 }
 
@@ -713,7 +734,7 @@ function triggerTSwanEvent() {
   print(`🚨  ${pick(TSWAM_ARRIVALS)}`, 'error');
   print(`🚨  T-Swan: "Hey young man..." ${pick(TSWAM_LINES)}`, 'error');
   print('🚨 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
-  print('   Type <strong>deal</strong> to handle T-Swan.', 'choice');
+  print('   Select <strong>deal</strong> to handle T-Swan.', 'choice');
 }
 
 function triggerRallyEvent() {
@@ -729,12 +750,12 @@ function triggerRallyEvent() {
     e.opts.forEach((idx, i) => {
       print(`   [${i+1}] "${FIREWORKS_ANSWERS[idx]}"`, 'choice');
     });
-    print('   Type: <strong>answer [1-3]</strong>', 'choice');
+    print('   Select an answer above.', 'choice');
   } else {
     print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
     print(`📱  INCOMING TEXT: "${e.q}"`, 'rally');
     print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
-    print('   Type <strong>answer</strong> to respond.', 'choice');
+    print('   Select <strong>answer</strong> to respond.', 'choice');
   }
 }
 
@@ -768,7 +789,7 @@ function cmdHelp() {
   print('  <strong>scoot</strong>          - Ride the Razor scooter for quick cash <em>(unlocks Week 2)</em>', 'system');
   print('  <strong>help</strong>           - This screen', 'system');
   printBlank();
-  print('  💡 Press <strong>TAB</strong> to auto-complete any command.', 'choice');
+  print('  💡 Use the button panel below to take actions.', 'choice');
   printBlank();
   print('  GOAL: Flip deals for 5 weeks. Prep the rally to 75%+.', 'dim');
   print('  Keep energy up. Don\'t run dry on Bud Light.', 'dim');
@@ -807,23 +828,22 @@ function cmdBrowse() {
   print('┌─────────────────────────────────────────────────────────────┐', 'system');
   print('│          📱 FACEBOOK MARKETPLACE - IRIS DRIVE AREA          │', 'system');
   print('└─────────────────────────────────────────────────────────────┘', 'system');
-  G.listings.forEach((item, i) => {
+  G.listings.forEach((item) => {
     const profit_est = Math.round((item.sellMin + item.sellMax)/2) - item.askPrice;
-    const profitStr = profit_est > 0 ? `<span style="color:#00ff88">~$${money(profit_est)} profit</span>` : `<span style="color:#ff4444">risky</span>`;
+    const profitStr = profit_est > 0 ? `<span style="color:#004d00">~$${money(profit_est)} profit</span>` : `<span style="color:#663300">risky</span>`;
     const specialTag = item.special ? ' <span style="color:#ff44ff;animation:blink 0.5s step-end infinite">⚠️ RECALLED!!!</span>' : '';
-    print(`  [${i+1}] ${item.emoji} <strong>${item.name}</strong>${specialTag}`, '');
-    print(`       💲 Asking: $${money(item.askPrice)} | 📝 "${item.condition}" | 👤 ${item.seller}`, 'dim');
-    print(`       Est. flip value: ${profitStr}`, '');
+    print(`  ${item.emoji} <strong style="color:#00ff41">${item.name}  $${money(item.askPrice)}</strong>${specialTag}`, '');
+    print(`       📝 "${item.condition}" | 👤 ${item.seller}  ${profitStr}`, 'dim');
   });
   printBlank();
-  print(`  Type <strong>buy [#]</strong> | <strong>negotiate [#]</strong> | or <strong>lowball [#]</strong> to deal`, 'choice');
+  print(`  Select a listing to buy, negotiate, or lowball.`, 'choice');
   G.energy = Math.max(0, G.energy - 3);
   afterAction();
 }
 
 function cmdBuy(idx) {
   if(G.listings.length === 0) {
-    print('No listings loaded. Type <strong>browse</strong> first.', 'error');
+    print('No listings loaded. Select <strong>browse</strong> first.', 'error');
     return;
   }
   const i = parseInt(idx) - 1;
@@ -866,7 +886,7 @@ function cmdBuy(idx) {
     print(`  a child inside. Matt, this is worth SERIOUS money`, 'special');
     print(`  to the right collector / liability case investigator.`, 'special');
     print(`  Paid: $${money(item.askPrice)}. Potential sell: $700-$1,200.`, 'money');
-    print(`  OR: type <strong>upgrade</strong> to apply Yeti credit and triple the value.`, 'special');
+    print(`  OR: select <strong>upgrade</strong> to apply Yeti credit and triple the value.`, 'special');
     print('', '');
     print('  Griffin approves. He is still barking though.', 'griffin');
   } else {
@@ -883,7 +903,7 @@ function cmdBuy(idx) {
 
 function cmdNegotiate(idx, isLowball) {
   if(G.listings.length === 0) {
-    print('No listings loaded. Type <strong>browse</strong> first.', 'error');
+    print('No listings loaded. Select <strong>browse</strong> first.', 'error');
     return;
   }
   const i = parseInt(idx) - 1;
@@ -915,12 +935,7 @@ function cmdNegotiate(idx, isLowball) {
     successChance = Math.min(0.95, Math.max(0.15, successChance + cashMod));
   }
 
-  const offerPrice = roundPrice(Math.round(item.askPrice * offerPct));
-
-  if(G.money < offerPrice) {
-    print(`Can't afford even your own offer ($${money(offerPrice)}). You have $${money(G.money)}.`, 'error');
-    return;
-  }
+  const offerPrice = Math.min(G.money, roundPrice(Math.round(item.askPrice * offerPct)));
 
   G.energy = Math.max(0, G.energy - energyCost);
 
@@ -1070,7 +1085,7 @@ function cmdDrink() {
   if(G.budLights <= 0) {
     printBlank();
     print('  🚨 OUT OF BUD LIGHT. 🚨', 'error');
-    print('  This is an emergency. Type <strong>restock</strong> immediately.', 'error');
+    print('  This is an emergency. Select <strong>restock</strong> immediately.', 'error');
     print('  Matt is running on fumes and spite.', 'dim');
     return;
   }
@@ -1087,7 +1102,7 @@ function cmdDrink() {
     print('  Word spread to the rally crew: no drinks for the boat rally.', 'error');
     print('  The Facebook event comments are not kind.', 'error');
     print(`  Rally prep CUT IN HALF: ${oldPrep}% → ${G.rallyPrep}%`, 'error');
-    print('  Type <strong>restock</strong> before this gets worse.', 'error');
+    print('  Select <strong>restock</strong> before this gets worse.', 'error');
     updateStatus();
   }
 
@@ -1111,7 +1126,7 @@ function cmdDrink() {
     print('  🟢 Wait — there\'s a True Lime packet in there. Matt tears it open.', 'special');
     print(`  True Lime bonus: +${limeBonus} energy. He doesn\'t question it.`, 'special');
   }
-  if(G.budLights <= 2) print('  ⚠️  Running low. Type <strong>restock</strong>.', 'event');
+  if(G.budLights <= 2) print('  ⚠️  Running low. Select <strong>restock</strong>.', 'event');
   updateStatus();
 }
 
@@ -1241,6 +1256,31 @@ function cmdDeal() {
   afterAction();
 }
 
+function cmdIgnoreTSwan() {
+  if (!G.pendingEvent || G.pendingEvent.type !== 'tswam') return;
+  printBlank();
+  print('  😶 Matt pretends not to see T-Swan. Stares at his phone.', 'dim');
+  print('  T-Swan is still there. He\'s not leaving.', 'error');
+  print('  T-Swan: "I can see you, man."', 'error');
+  // Ignoring T-Swan costs the whole day — same as hitting next with a pending tswan
+  cmdNext();
+}
+
+function cmdIgnoreGriffin() {
+  if (!G.pendingEvent || G.pendingEvent.type !== 'griffin') return;
+  const bite = rnd(8, 18);
+  G.biteMeter = Math.min(100, G.biteMeter + bite);
+  printBlank();
+  print('  😶 Matt pretends Griffin is someone else\'s dog.', 'dim');
+  print('  Griffin disagrees. Volume increases.', 'griffin');
+  print(`  🐕 Bite risk +${bite}% → ${G.biteMeter}%`, G.biteMeter >= 60 ? 'error' : 'event');
+  if (Math.random() < G.biteMeter / 250) {
+    griffinBiteGameOver();
+    return;
+  }
+  G.pendingEvent = null;
+  afterAction();
+}
 
 function cmdCalm() {
   if(!G.pendingEvent || G.pendingEvent.type !== 'griffin') {
@@ -1401,7 +1441,7 @@ function cmdRally() {
   } else if(G.rallyPrep >= 100) {
     print('  ✅ FULLY PREPPED. The rally is going to be legendary.', 'money');
   } else {
-    print(`  ${weeksLeft} week(s) to get to 100%. Type <strong>prep</strong> to work on it.`, 'dim');
+    print(`  ${weeksLeft} week(s) to get to 100%. Select <strong>prep</strong> to work on it.`, 'dim');
   }
   printBlank();
 }
@@ -1426,7 +1466,7 @@ function cmdNext() {
       G.pendingEvent = null;
       // fall through — week advances as penalty
     } else {
-      print('Someone is waiting on a reply about the rally. Type <strong>answer</strong> first.', 'rally');
+      print('Someone is waiting on a reply about the rally. Select <strong>answer</strong> first.', 'rally');
       return;
     }
   }
@@ -1461,7 +1501,7 @@ function cmdNext() {
     printBlank();
     print('  Week 2. The hustle is picking up. The neighborhood is watching.', 'dim');
     print('  Matt notices his Razz parked by the garage. Hasn\'t taken it out yet.', 'dim');
-    print('  🛵 NEW: Type <strong>scoot</strong> to ride around the neighborhood on the Razz.', 'choice');
+    print('  🛵 NEW: Select <strong>scoot</strong> to ride around the neighborhood on the Razz.', 'choice');
   } else if(G.week === 3) {
     printBlank();
     print('  Week 3. Matt\'s Marketplace game is getting sharper.', 'dim');
@@ -1490,7 +1530,7 @@ function cmdNext() {
   if(G.budLights === 0) {
     printBlank();
     print('⚠️  CRITICAL: No Bud Lights remaining. Matt is running on vibes alone.', 'error');
-    print('   Type <strong>restock</strong> ($25) immediately.', 'error');
+    print('   Select <strong>restock</strong> ($25) immediately.', 'error');
   }
 
   updateStatus();
@@ -1852,6 +1892,123 @@ function cmdDeveloper() {
 }
 
 // ============================================================
+//  BUTTON PANEL
+// ============================================================
+let btnCtx = { mode: 'default', selectedListing: null };
+
+function addBtn(panel, label, cmd, cls, clickFn) {
+  const b = document.createElement('button');
+  b.className = 'game-btn' + (cls ? ' ' + cls : '');
+  b.innerHTML = label;
+  b.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (clickFn) { clickFn(); return; }
+    if (cmd) processCommand(cmd);
+  });
+  panel.appendChild(b);
+}
+
+function renderButtons() {
+  const panel = document.getElementById('btn-panel');
+  if (!panel) return;
+  panel.innerHTML = '';
+
+  if (G.phase === 'over') return;
+
+  // Pending events take full priority
+  if (G.pendingEvent) {
+    const e = G.pendingEvent;
+    if (e.type === 'griffin') {
+      addBtn(panel, '🐕 CALM GRIFFIN', 'calm', 'btn-event');
+      addBtn(panel, '🙈 IGNORE (risky)', 'ignore-griffin', 'btn-back');
+    } else if (e.type === 'tswam') {
+      addBtn(panel, '🤝 DEAL WITH T-SWAN', 'deal', 'btn-event');
+      addBtn(panel, '🙈 IGNORE (risky)', 'ignore-tswan', 'btn-back');
+    } else if (e.type === 'fireworks') {
+      e.opts.forEach((idx, i) => {
+        addBtn(panel, `ANSWER ${i+1}`, `answer ${i+1}`, 'btn-choice');
+      });
+    } else if (e.type === 'rally') {
+      addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
+    }
+    return;
+  }
+
+  // Listing-action sub-mode: pick buy / negotiate / lowball for a specific item
+  if (btnCtx.mode === 'listing-action' && btnCtx.selectedListing !== null) {
+    const item = G.listings[btnCtx.selectedListing];
+    if (item) {
+      const n = btnCtx.selectedListing + 1;
+      const minLowball = Math.round(item.askPrice * 0.40);
+      if (G.money >= minLowball) {
+        // Only show higher-tier options if actually affordable
+        if (G.money >= item.askPrice)
+          addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy');
+        const minNegotiate = Math.round(item.askPrice * 0.78);
+        if (G.money >= minNegotiate)
+          addBtn(panel, `🤝 NEGOTIATE (~$${money(minNegotiate)}+)`, `negotiate ${n}`, 'btn-negotiate');
+        addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball');
+      }
+      // If can't afford to lowball, no action buttons — just back
+      addBtn(panel, '← BACK', null, 'btn-back', () => {
+        btnCtx.mode = 'listings'; btnCtx.selectedListing = null; renderButtons();
+      });
+      return;
+    }
+    // Item was removed, fall through to listings
+    btnCtx.mode = 'listings'; btnCtx.selectedListing = null;
+  }
+
+  // Listings mode: only show items you can at least lowball
+  if (btnCtx.mode === 'listings' && G.listings.length > 0) {
+    G.listings.forEach((item, i) => {
+      if (G.money < Math.round(item.askPrice * 0.40)) return;
+      addBtn(panel, `${item.emoji} ${item.name}  $${money(item.askPrice)}`, null, 'btn-listing', () => {
+        btnCtx.mode = 'listing-action';
+        btnCtx.selectedListing = i;
+        renderButtons();
+      });
+    });
+    addBtn(panel, '← BACK', null, 'btn-back', () => {
+      btnCtx.mode = 'default'; renderButtons();
+    });
+    return;
+  }
+
+  // More mode: all options + back
+  if (btnCtx.mode === 'more') {
+    addBtn(panel, '🔍 BROWSE', 'browse', 'btn-primary');
+    if (G.inventory.length > 0) addBtn(panel, '💸 SELL ALL', 'sell', 'btn-sell');
+    if (G.budLights > 0)        addBtn(panel, '🍺 RECHARGE', 'recharge', 'btn-beer');
+                                addBtn(panel, '🏪 RESTOCK', 'restock', '');
+                                addBtn(panel, '📋 PREP', 'prep', '');
+    if (G.week >= 2)            addBtn(panel, '🛴 SCOOT', 'scoot', '');
+                                addBtn(panel, '📊 STATUS', 'status', '');
+                                addBtn(panel, '📦 INVENTORY', 'inventory', '');
+                                addBtn(panel, '🎉 RALLY', 'rally', '');
+    const hasYeti = G.inventory.some(i => i.id === 'yeti_recalled' && !i.upgraded);
+    if (hasYeti)                addBtn(panel, '🧊 UPGRADE YETI', 'upgrade', 'btn-sell');
+                                addBtn(panel, '← BACK', null, 'btn-back', () => {
+                                  btnCtx.mode = 'default'; renderButtons();
+                                });
+    return;
+  }
+
+  // Default mode
+  addBtn(panel, '🔍 BROWSE', 'browse', 'btn-primary');
+  if (G.inventory.length > 0) addBtn(panel, '💸 SELL ALL', 'sell', 'btn-sell');
+  if (G.budLights > 0)        addBtn(panel, '🍺 RECHARGE', 'recharge', 'btn-beer');
+  if (G.budLights <= 3)       addBtn(panel, '🏪 RESTOCK', 'restock', '');
+                              addBtn(panel, '📋 PREP', 'prep', '');
+  if (G.week >= 2)            addBtn(panel, '🛴 SCOOT', 'scoot', '');
+  const hasYetiDefault = G.inventory.some(i => i.id === 'yeti_recalled' && !i.upgraded);
+  if (hasYetiDefault)         addBtn(panel, '🧊⭐ UPGRADE YETI', 'upgrade', 'btn-upgrade');
+                              addBtn(panel, '⋯ MORE', null, 'btn-next', () => {
+                                btnCtx.mode = 'more'; renderButtons();
+                              });
+}
+
+// ============================================================
 //  INPUT HANDLER
 // ============================================================
 function processCommand(raw) {
@@ -1901,6 +2058,8 @@ function processCommand(raw) {
       cmdStatus(); break;
     case 'deal': case 'tswan': case 't-swan': case 'tswam':
       cmdDeal(); break;
+    case 'ignore-griffin': cmdIgnoreGriffin(); break;
+    case 'ignore-tswan':   cmdIgnoreTSwan();   break;
     case 'upgrade': case 'yeti':
       cmdUpgrade(); break;
     case 'truelime':
@@ -1932,7 +2091,7 @@ function processCommand(raw) {
       cmdNext(); break;
     default:
       const unknowns = [
-        `Unknown command: "${input}". Type <strong>help</strong>.`,
+        `Unknown command: "${input}". Select <strong>help</strong>.`,
         `Matt looked up from his phone. "What?"`,
         `${input}? Not a thing. Try <strong>help</strong>.`,
         `Griffin barked in confusion.`,
@@ -1940,6 +2099,18 @@ function processCommand(raw) {
       ];
       print(pick(unknowns), 'error');
   }
+
+  // Update button context based on what command ran
+  const _browseAliases = ['browse','scroll','b','marketplace','fb','search'];
+  const _buyAliases    = ['buy','purchase','get','negotiate','counter','offer','lowball','lb','lowbll'];
+  if (_browseAliases.includes(cmd)) {
+    btnCtx = { mode: 'listings', selectedListing: null };
+  } else if (_buyAliases.includes(cmd)) {
+    btnCtx = { mode: G.listings.length > 0 ? 'listings' : 'default', selectedListing: null };
+  } else {
+    btnCtx = { mode: 'default', selectedListing: null };
+  }
+  renderButtons();
 }
 
 // ── YouTube soundtrack ──────────────────────────────────────
@@ -1949,24 +2120,23 @@ function loadYT() {
   ytLoaded = true;
   document.getElementById('yt-frame').src =
     'https://www.youtube.com/embed/bls9j98gFRw?autoplay=1&rel=0';
-  document.getElementById('yt-label').textContent = '🎵 SOUNDTRACK ▼';
 }
 function toggleYT() {
   const dock = document.getElementById('yt-dock');
-  if(!ytLoaded) { loadYT(); return; }
+  if(!ytLoaded) {
+    loadYT();
+    dock.classList.remove('collapsed');
+    document.getElementById('yt-label').textContent = '🎵 SOUNDTRACK ▼';
+    return;
+  }
   const collapsed = dock.classList.toggle('collapsed');
   document.getElementById('yt-label').textContent =
     collapsed ? '🎵 SOUNDTRACK ▶' : '🎵 SOUNDTRACK ▼';
 }
-// Start on first keystroke (satisfies browser autoplay policy)
-document.addEventListener('keydown', function startMusic() {
-  loadYT();
-  document.removeEventListener('keydown', startMusic);
-}, { once: true });
+// Try autoplay immediately; fall back to first button click
+loadYT();
+document.addEventListener('click', loadYT, { once: true });
 
-// Keep input focused — clicking anywhere refocuses it
-document.addEventListener('click', () => document.getElementById('cmd-input').focus());
-document.getElementById('cmd-input').focus();
 
 const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer'];
 
@@ -2043,19 +2213,16 @@ function intro() {
     print('  The deals are out there. They\'re not going to flip themselves.', 'dim');
     print('  ─────────────────────────────────────────────────────', 'dim');
     printBlank();
-    print('  Type <strong>help</strong> for commands. Type <strong>browse</strong> to start scrolling deals.', 'choice');
+    print('  Select <strong>browse</strong> to start scoring deals. Use the <strong>more</strong> button for all options.', 'choice');
     printBlank();
     updateStatus();
+    renderButtons();
     out.scrollTop = 0;
   }, 400);
 }
 
 intro();
 
-// Mobile warning
-if(window.innerWidth < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  document.getElementById('mobile-warning').classList.add('show');
-}
 </script>
 </body>
 </html>
