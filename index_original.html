@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATT'S MARKETPLACE HUSTLE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #00ff41;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 20px;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  #status-bar {
+    background: #001a00;
+    border-bottom: 1px solid #00ff41;
+    padding: 6px 12px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .stat { color: #00cc33; }
+  .stat span { color: #00ff41; }
+  .stat .warn { color: #ffaa00; }
+  .stat .danger { color: #ff3333; }
+  .stat .good { color: #00ffaa; }
+
+  #output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+  }
+
+  #output::-webkit-scrollbar { width: 6px; }
+  #output::-webkit-scrollbar-track { background: #001100; }
+  #output::-webkit-scrollbar-thumb { background: #00aa22; }
+
+  .line { margin: 2px 0; }
+  .line.system { color: #00aa22; }
+  .line.event { color: #ffdd00; }
+  .line.griffin { color: #ff6600; }
+  .line.rally { color: #00ccff; }
+  .line.money { color: #00ffaa; }
+  .line.error { color: #ff4444; }
+  .line.title { color: #00ff41; font-family: 'VT323', monospace; font-size: 22px; }
+  .line.dim { color: #006600; }
+  .line.prompt-echo { color: #88ff88; }
+  .line.win { color: #ffff00; font-family: 'VT323', monospace; font-size: 24px; }
+  .line.lose { color: #ff2222; font-family: 'VT323', monospace; font-size: 22px; }
+  .line.special { color: #ff44ff; }
+  .line.beer { color: #ffcc00; }
+  .line.choice { color: #00ffff; }
+
+  #input-area {
+    border-top: 1px solid #00ff41;
+    background: #001a00;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  #prompt-label {
+    color: #00ff41;
+    font-family: 'VT323', monospace;
+    font-size: 26px;
+    white-space: nowrap;
+  }
+
+  #cmd-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #00ff41;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    caret-color: #00ff41;
+  }
+
+  #cmd-input::selection { background: #004400; }
+
+  .ascii-art {
+    color: #00ff41;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: pre;
+  }
+
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  @keyframes drunkNeighbor {
+    0%   { filter: none; }
+    6%   { filter: hue-rotate(100deg) saturate(3) brightness(1.4); }
+    14%  { filter: hue-rotate(220deg) saturate(2) brightness(0.7); }
+    24%  { filter: hue-rotate(300deg) saturate(4) brightness(1.3); }
+    36%  { filter: hue-rotate(160deg) saturate(2.5) brightness(1.1); }
+    50%  { filter: hue-rotate(80deg) saturate(2); }
+    66%  { filter: hue-rotate(40deg) saturate(1.5); }
+    82%  { filter: hue-rotate(15deg) saturate(1.2); }
+    100% { filter: none; }
+  }
+  body.drunk-mode { animation: drunkNeighbor 3.5s ease-out forwards; }
+
+  @keyframes flashDanger {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.1; }
+  }
+  .flash-danger { animation: flashDanger 0.6s step-end infinite; color: #ff3333 !important; }
+
+  @keyframes timeTravel {
+    0%   { filter: none; transform: scale(1); }
+    8%   { filter: invert(1) hue-rotate(180deg) saturate(5); transform: scale(1.04); }
+    18%  { filter: hue-rotate(270deg) saturate(4) brightness(1.5); transform: scale(0.96); }
+    30%  { filter: invert(0.8) hue-rotate(90deg) contrast(3); transform: scale(1.06); }
+    45%  { filter: saturate(6) hue-rotate(200deg); transform: scale(1); }
+    62%  { filter: invert(0.4) hue-rotate(45deg); }
+    80%  { filter: hue-rotate(20deg) saturate(2); }
+    100% { filter: none; transform: scale(1); }
+  }
+  body.time-travel-mode { animation: timeTravel 2.2s ease-in-out forwards; }
+
+  .bar-fill {
+    display: inline-block;
+    background: #00ff41;
+    height: 10px;
+    vertical-align: middle;
+  }
+  .bar-empty {
+    display: inline-block;
+    background: #003300;
+    height: 10px;
+    vertical-align: middle;
+  }
+
+  #yt-dock {
+    position: fixed;
+    top: 44px;
+    right: 10px;
+    z-index: 500;
+    border: 1px solid #00ff41;
+    background: #000;
+    box-shadow: 0 0 8px rgba(0,255,65,0.3);
+  }
+  #yt-label {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #00ff41;
+    padding: 3px 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+  #yt-label:hover { background: #001a00; }
+  #yt-frame { display: block; }
+  #yt-dock.collapsed #yt-frame { display: none; }
+  #yt-dock.collapsed { border-bottom: none; }
+
+  /* Push input above tiiny.host footer ad on mobile */
+  @media (max-width: 768px) {
+    #input-area {
+      padding-bottom: calc(8px + 62px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="status-bar">
+  <div class="stat">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
+  <div class="stat">💰 CASH: $<span id="s-money">500</span></div>
+  <div class="stat">🍺 BUD LIGHTS: <span id="s-beer">6</span></div>
+  <div class="stat">⚡ ENERGY: <span id="s-energy">100</span>%</div>
+  <div class="stat">🎉 RALLY PREP: <span id="s-rally">0</span>%</div>
+  <div class="stat">📦 INVENTORY: <span id="s-inv">0</span> items</div>
+</div>
+
+<div id="output"></div>
+
+<div id="yt-dock">
+  <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK — CLICK TO PLAY</div>
+  <iframe id="yt-frame" width="220" height="124" frameborder="0"
+    allow="autoplay; encrypted-media; fullscreen"
+    allowfullscreen></iframe>
+</div>
+
+<div id="input-area">
+  <div id="prompt-label">MATT&gt;</div>
+  <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus placeholder="type 'help' for commands...">
+</div>
+
+<script>
+// ============================================================
+//  GAME DATA
+// ============================================================
+
+const ITEMS = [
+  { id:'atv',        name:'ATV',                    buyMin:800,  buyMax:2000, sellMin:1400, sellMax:3200, emoji:'🏍️' },
+  { id:'sxs',        name:'Side-by-Side',            buyMin:3000, buyMax:7000, sellMin:5500, sellMax:11000, emoji:'🚙' },
+  { id:'scooter',    name:'Scooter',                 buyMin:150,  buyMax:600,  sellMin:300,  sellMax:900,  emoji:'🛵' },
+  { id:'boat',       name:'Bass Boat',               buyMin:2500, buyMax:8000, sellMin:4500, sellMax:14000,emoji:'⛵' },
+  { id:'bbq',        name:'BBQ Grill',               buyMin:40,   buyMax:250,  sellMin:80,   sellMax:450,  emoji:'🍖' },
+  { id:'golf',       name:'Golf Club Set',           buyMin:50,   buyMax:300,  sellMin:100,  sellMax:550,  emoji:'⛳' },
+  { id:'yeti',       name:'Yeti Cooler',             buyMin:80,   buyMax:350,  sellMin:175,  sellMax:600,  emoji:'🧊' },
+  { id:'mower',      name:'Zero-Turn Mower',         buyMin:500,  buyMax:1800, sellMin:900,  sellMax:3000, emoji:'🌿' },
+  { id:'kayak',      name:'Kayak',                   buyMin:100,  buyMax:400,  sellMin:200,  sellMax:700,  emoji:'🚣' },
+  { id:'trailer',    name:'Utility Trailer',         buyMin:300,  buyMax:900,  sellMin:600,  sellMax:1600, emoji:'🚚' },
+];
+
+const RECALLED_YETI = {
+  id:'yeti_recalled', name:'Yeti Cooler (MAGNETIC SEAL - RECALLED!!!)', buyMin:30, buyMax:60,
+  sellMin:700, sellMax:1200, emoji:'🧊', special:true
+};
+
+const YYT_SONGS = [
+  '"Wait (The Whisper Song)"', '"Shake"', '"Whistle While You Twerk"',
+  '"Salt Shaker"', '"Georgia Dome"', '"Get Low"', '"Halftime (Stand Up and Get Crunk)"',
+  '"Naggin\'"', '"Say I Yi Yi"', '"Dangerous"'
+];
+
+const SARCASTIC_CALM = [
+  'GRIFFIN. BUDDY. That man is just WALKING. He\'s allowed to DO that.',
+  'Griffin, I swear on every Bud Light in this cooler, CHILL OUT.',
+  'GRIFFIN! He\'s just checking his mail! It\'s not a federal crime!',
+  'Griffin, he\'s a NEIGHBOR. We\'ve SEEN him for SIX YEARS. SIX.',
+  'Oh sure Griffin, bark at the WIND while you\'re at it.',
+  'Griffin! That\'s Dave! You KNOW Dave! ...He clearly doesn\'t know Dave.',
+  'GRIFFIN SIT. ...He\'s not sitting. He never sits.',
+  'Griffin, I am trying to make MONEY here. Please. I am BEGGING you.',
+  'GRIFF. Buddy. She\'s just a lady with a stroller. A STROLLER.',
+  'Griffin, on behalf of the entire neighborhood, I apologize. ...He doesn\'t care.',
+];
+
+const FIREWORKS_ANSWERS = [
+  'That\'s a great question. Moving on.',
+  'They will happen. This has been confirmed. The rest is details.',
+  'You know, time is kind of a construct when you really think about it.',
+  'Before breakfast? After dinner? The answer lies somewhere in that range.',
+  'I forwarded your question to the fireworks. They said they\'d let you know.',
+  'There\'s a schedule. It\'s on the flyer. I\'m not the flyer.',
+  'When they\'re ready. They\'re professionals. They have a whole process.',
+  'Same time as last year. ...You don\'t remember last year, do you.',
+  'At some point after the boats get going. Probably. Directionally.',
+  'The concept of "when" is something we\'re still workshopping. Stay tuned.',
+];
+
+const OTHER_RALLY_QUESTIONS = [
+  { q: 'Is the Ying Yang Twins theme confirmed?', a: 'Yes. It is confirmed. It has been confirmed. It will remain confirmed.' },
+  { q: 'Can I bring my jet ski even though I don\'t have a boat?', a: 'It\'s a BOAT rally. BOAT. The word is right there.' },
+  { q: 'What if it rains?', a: 'Then we get wet. Just like every other time it rains.' },
+  { q: 'Are kids allowed?', a: 'It\'s a neighborhood event. Kids live in the neighborhood. So yes.' },
+  { q: 'Will there be food?', a: 'I have a BBQ. You have a mouth. I think we can work something out.' },
+  { q: 'Can I bring my cousin from out of town?', a: 'Sure. As long as they don\'t ask me about fireworks.' },
+  { q: 'Is there a dress code?', a: 'Basketball shorts are acceptable. Kirkland slides encouraged.' },
+  { q: 'Who\'s in charge of the music?', a: 'The Ying Yang Twins. Essentially. Their discography.' },
+  { q: 'Will the Ying Yang Twins actually be there?', a: 'Not if I don\'t make enough money to make it worth their while, no.' },
+  { q: 'What time does it start?', a: 'The flyer says 4pm. The flyer that I sent. To everyone. Twice.' },
+];
+
+// ============================================================
+//  GAME STATE
+// ============================================================
+const G = {
+  week: 1,
+  totalWeeks: 5,
+  money: 500,
+  budLights: 6,
+  energy: 100,
+  rallyPrep: 0,
+  inventory: [],    // {id, name, paidPrice, emoji, special}
+  listings: [],     // current marketplace listings
+  pendingEvent: null, // {type:'griffin'} or {type:'rally', q, a} or {type:'fireworks'}
+  totalProfit: 0,
+  startMoney: 500,
+  foundRecalled: false,
+  rallyOrganized: false,
+  griffinCalmAttempts: 0,
+  questionsAnswered: 0,
+  beersDrunk: 0,
+  biteMeter: 0,       // 0-100, increases when Griffin is not calmed
+  yetiUpgraded: false,
+  carHonkSeen: false,
+  trueLimeUsed: false,
+  crockettSeen: false,
+  weeklyPrepGained: 0,
+  phase: 'playing', // 'playing','won','lost'
+  currentSong: YYT_SONGS[Math.floor(Math.random()*YYT_SONGS.length)],
+  actionsTaken: 0,
+  maxActionsPerWeek: 10,
+};
+
+// ============================================================
+//  UTILITY
+// ============================================================
+function rnd(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+function coin(p=0.5) { return Math.random() < p; }
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function money(n) { return n.toLocaleString(); }
+
+function energyClass(e) {
+  if(e >= 60) return 'good';
+  if(e >= 30) return 'warn';
+  return 'danger';
+}
+function beerClass(b) {
+  if(b >= 4) return 'good';
+  if(b >= 2) return 'warn';
+  return 'danger';
+}
+
+// ============================================================
+//  OUTPUT
+// ============================================================
+const out = document.getElementById('output');
+
+function print(text='', cls='') {
+  const d = document.createElement('div');
+  d.className = 'line' + (cls ? ' '+cls : '');
+  d.innerHTML = text;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+
+function printBlank() { print('&nbsp;'); }
+
+function printBar(label, val, max, color='#00ff41', warnColor='#ffaa00', dangerColor='#ff3333') {
+  const pct = Math.min(100, Math.max(0, Math.round((val/max)*100)));
+  const filled = Math.round(pct/4);
+  const empty = 25-filled;
+  const c = pct >= 60 ? color : pct >= 30 ? warnColor : dangerColor;
+  const bar = `<span style="color:${c}">${'█'.repeat(filled)}</span><span style="color:#222">${'░'.repeat(empty)}</span>`;
+  print(`  ${label.padEnd(14)} [${bar}] ${pct}%`);
+}
+
+function updateStatus() {
+  document.getElementById('s-week').textContent = G.week;
+  document.getElementById('s-total').textContent = G.totalWeeks;
+  document.getElementById('s-money').textContent = money(G.money);
+
+  const beerEl = document.getElementById('s-beer');
+  beerEl.textContent = G.budLights;
+  beerEl.className = G.budLights <= 2 ? 'flash-danger' : beerClass(G.budLights);
+
+  const enEl = document.getElementById('s-energy');
+  enEl.textContent = G.energy;
+  enEl.className = G.energy <= 20 ? 'flash-danger' : energyClass(G.energy);
+
+  const rallyEl = document.getElementById('s-rally');
+  rallyEl.textContent = G.rallyPrep;
+  rallyEl.className = G.rallyPrep >= 80 ? 'good' : G.rallyPrep >= 50 ? 'warn' : '';
+
+  document.getElementById('s-inv').textContent = G.inventory.length;
+}
+
+// ============================================================
+//  MARKETPLACE LISTINGS GENERATOR
+// ============================================================
+function roundPrice(p) {
+  if(p >= 1000) return Math.round(p / 100) * 100;
+  return Math.round(p / 10) * 10;
+}
+
+function generateListings() {
+  G.listings = [];
+  const count = 4;
+  const pool = [...ITEMS];
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  // rare chance for recalled yeti (ramps up after week 2)
+  const recallChance = G.week >= 2 ? Math.min(0.40, 0.08 + (G.week-2)*0.10) : 0;
+  let addedRecall = false;
+  if(!G.foundRecalled && Math.random() < recallChance) {
+    addedRecall = true;
+  }
+
+  for(let i=0;i<Math.min(count, pool.length);i++) {
+    const item = pool[i];
+    const askPrice = roundPrice(rnd(item.buyMin, item.buyMax));
+    const conditions = ['runs great','needs some TLC','one careful owner','wife said get rid of it',
+      'motivated seller','priced to move','barely used','stored in garage','has a few scratches',
+      'serious inquiries only','cash only','no lowballers I know what I have',
+      'just needs a little work','selling for a friend','upgrading, gotta go',
+      'ran when parked','like new condition','some rust but solid','never used',
+      'kids grew up, no longer needed','moving, must sell','priced below market'];
+    G.listings.push({
+      ...item,
+      askPrice,
+      condition: pick(conditions),
+      seller: pick(['DaveM','BobR','SteveW','Mike_T','JohnnyB','TerryK','ChuckD','RandyP',
+        'GaryL','PhilH','KevinS','BradT','LarryM','ScottW','MikeD','CraigsList_Mike',
+        'BigSteve','ToddR','DennisK','RonaldP','PeteC'])
+    });
+  }
+
+  if(addedRecall) {
+    const askPrice = roundPrice(rnd(RECALLED_YETI.buyMin, RECALLED_YETI.buyMax));
+    G.listings.splice(rnd(0,G.listings.length), 0, {
+      ...RECALLED_YETI,
+      askPrice,
+      condition: 'has a weird magnetic lid thing, not sure what that is',
+      seller: pick(['DaveM','BobR','SteveW','CraigsList_Mike'])
+    });
+  }
+}
+
+// ============================================================
+//  POST-ACTION HELPER
+// ============================================================
+function afterAction() {
+  G.actionsTaken++;
+  updateStatus();
+
+  // Energy = 0 → sober game over
+  if(G.energy <= 0 && G.phase === 'playing') {
+    soberGameOver();
+    return;
+  }
+
+  // Passive bite meter creep — each action taken while Griffin is already barking
+  if(G.pendingEvent && G.pendingEvent.type === 'griffin') {
+    G.biteMeter = Math.min(100, G.biteMeter + rnd(3, 6));
+    if(G.biteMeter >= 35) {
+      print(`  🐕 ⚠️  Griffin is still going. Bite risk: ${G.biteMeter}%. Type <strong>calm</strong>.`, G.biteMeter >= 60 ? 'error' : 'event');
+    }
+    if(Math.random() < G.biteMeter / 450) { griffinBiteGameOver(); return; }
+  }
+
+  // Unanswered rally question bleeds prep
+  if(G.pendingEvent && G.pendingEvent.type === 'rally') {
+    const bleed = rnd(2, 5);
+    G.rallyPrep = Math.max(0, G.rallyPrep - bleed);
+    print(`  📱 That rally question is still sitting there. Prep -${bleed}%. Type <strong>answer</strong>.`, 'event');
+  }
+
+  // Prep reminder when behind
+  if(G.week >= 2 && G.rallyPrep < 45 && G.actionsTaken % 4 === 0) {
+    printBlank();
+    print('  ⚠️  Reminder: rally prep is at ' + G.rallyPrep + '%. Type <strong>prep</strong> to work on it.', 'event');
+  }
+
+  rollRandomEvent();
+  if(G.pendingEvent) {
+    if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
+    else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
+    else triggerRallyEvent();
+  }
+
+  // Auto-advance week after maxActionsPerWeek actions with no blocking event
+  if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing') {
+    printBlank();
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
+    print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'dim');
+    setTimeout(() => cmdNext(), 900);
+  }
+}
+
+// ============================================================
+//  RANDOM EVENTS
+// ============================================================
+function timeTravelFlash() {
+  document.body.classList.remove('time-travel-mode');
+  void document.body.offsetWidth;
+  document.body.classList.add('time-travel-mode');
+  setTimeout(() => document.body.classList.remove('time-travel-mode'), 2200);
+}
+
+function rollRandomEvent() {
+  if(G.pendingEvent) return; // already have one
+
+  // Crockett: once per game, starts firing after action 4
+  if(!G.crockettSeen && G.actionsTaken >= 4 && Math.random() < 0.055) {
+    G.crockettSeen = true;
+    const shift = coin() ? 1 : -1;
+    const oldWeek = G.week;
+    G.week = Math.max(1, Math.min(G.totalWeeks, G.week + shift));
+    timeTravelFlash();
+    printBlank();
+    print('🌈 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
+    print('🌈  A muscular man in tie-dye is standing in your driveway.', 'special');
+    print('🌈  Crockett: "Hey man... I got a surprise for you."', 'special');
+    print('🌈 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
+    setTimeout(() => {
+      printBlank();
+      print('  ⏰ SOMETHING IS HAPPENING TO TIME ITSELF.', 'win');
+      print(`  Matt has accidentally time traveled ${shift > 0 ? 'FORWARD' : 'BACKWARD'} one week.`, 'win');
+      print(`  Week ${oldWeek} → Week ${G.week}.`, 'win');
+      printBlank();
+      print('  Matt: "I ain\'t shook."', 'money');
+      print('  He recharges. Slides stay on. Continues.', 'dim');
+      updateStatus();
+    }, 1900);
+    return;
+  }
+
+  const r = Math.random();
+  // griffin barks: 9%
+  if(r < 0.09) {
+    const neighbors = ['the mailman','a jogger','Dave from two doors down',
+      'a squirrel (just a squirrel)','the Amazon guy','someone walking a golden retriever',
+      'a kid on a bike','the lawn care truck','literally nobody visible',
+      'a woman with a stroller','the pest control van'];
+    G.pendingEvent = { type:'griffin', target: pick(neighbors) };
+    return;
+  }
+  // T-Swan car honking distraction — once per game
+  if(!G.carHonkSeen && r < 0.12) {
+    G.carHonkSeen = true;
+    const carLines = [
+      'Down the street, T-Swan\'s car is honking by itself. T-Swan is spraying it with a garden hose.',
+      'T-Swan\'s car alarm is going off. T-Swan is responding by hosing down the entire vehicle.',
+      'Matt looks up. T-Swan\'s car: honking. T-Swan: hose. Full stream. Eye contact with Matt.',
+      'Somewhere on Iris Drive, T-Swan\'s car horn has been going for 40 seconds. T-Swan just turned the hose on it.',
+    ];
+    print('', '');
+    print('  🚗 ' + pick(carLines), 'dim');
+    print('  Matt watches for a moment. Takes a sip. Gets back to work.', 'dim');
+    return;
+  }
+  // T-Swan shows up drunk: 3%
+  if(r < 0.15) {
+    G.pendingEvent = { type:'tswam' };
+    return;
+  }
+  // fireworks text from Facebook: 2%
+  if(r < 0.22) {
+    // Pick 3 unique answer indices to show this time
+    const pool = [...Array(FIREWORKS_ANSWERS.length).keys()];
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    G.pendingEvent = { type:'fireworks', opts: pool.slice(0,3) };
+    return;
+  }
+  // other boat rally questions: 8%
+  if(r < 0.33) {
+    const q = pick(OTHER_RALLY_QUESTIONS);
+    G.pendingEvent = { type:'rally', q:q.q, a:q.a };
+    return;
+  }
+  // bud light run low warning
+  if(G.budLights <= 1 && r < 0.55) {
+    print('', '');
+    print('⚠️  CRITICAL: You are almost out of Bud Light. This is not a drill.', 'event');
+    print('   Consider restocking. Matt does not function well without fuel.', 'dim');
+  }
+}
+
+// ============================================================
+//  GRIFFIN EVENT
+// ============================================================
+function triggerGriffinEvent() {
+  const e = G.pendingEvent;
+  printBlank();
+  print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
+  print(`🐕  GRIFFIN ALERT: Griffin is GOING ABSOLUTELY INSANE`, 'griffin');
+  print(`🐕  at ${e.target}.`, 'griffin');
+  print(`🐕  The whole neighborhood can hear this.`, 'griffin');
+  print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
+  print('   Type <strong>calm</strong> to attempt to calm Griffin down.', 'choice');
+  print('   (Results may vary. They will vary. Downward.)', 'dim');
+}
+
+// ============================================================
+//  BOAT RALLY EVENT
+// ============================================================
+function drunkFlash() {
+  document.body.classList.remove('drunk-mode');
+  void document.body.offsetWidth; // force reflow to restart animation
+  document.body.classList.add('drunk-mode');
+  setTimeout(() => document.body.classList.remove('drunk-mode'), 3500);
+}
+
+const TSWAM_ARRIVALS = [
+  'T-Swan has materialized in your driveway.',
+  'T-Swan is leaning on your truck. He is not leaning on purpose.',
+  'T-Swan just appeared from the side of the house. Unclear which direction he came from.',
+  'T-Swan is standing on your lawn holding a solo cup that is not from your house.',
+  'T-Swan has been on your front porch for an unknown amount of time.',
+];
+const TSWAM_LINES = [
+  '"MATT. Bro. MATT. Do you have... hold on. Do you have any... wait."',
+  '"I just wanted to say. You\'re like. You\'re doing great man. At the... the thing."',
+  '"Bro your dog is going CRAZY in there. You should check on— actually he\'s fine."',
+  '"Do you have any more of those... the cold ones. In the blue cans."',
+  '"I told everyone about the boat thing. They\'re very excited. Or I think I did."',
+  '"Your garage looks different. Did you get new stuff? That\'s a lot of stuff."',
+];
+const TSWAM_MATT_REPLIES = [
+  'Matt: "T-Swan. Go home."',
+  'Matt: "T-Swan. It\'s 2pm on a Tuesday."',
+  'Matt: "T-Swan I am literally trying to run a business right now."',
+  'Matt: "T-Swan. Buddy. Where do you live. Point to it."',
+  'Matt: "T-Swan I will give you one Bud Light to leave."',
+  'Matt: "T-Swan, Griffin is going to start barking again. You should go."',
+];
+
+function triggerTSwanEvent() {
+  drunkFlash();
+  printBlank();
+  print('🚨 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
+  print('🚨  T-SWAN ALERT', 'error');
+  print(`🚨  ${pick(TSWAM_ARRIVALS)}`, 'error');
+  print(`🚨  T-Swan: "Hey young man..." ${pick(TSWAM_LINES)}`, 'error');
+  print('🚨 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
+  print('   Type <strong>deal</strong> to handle T-Swan.', 'choice');
+}
+
+function triggerRallyEvent() {
+  const e = G.pendingEvent;
+  printBlank();
+  if(e.type === 'fireworks') {
+    print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
+    print('📱  Facebook Notification', 'rally');
+    print('📱  "Hey Matt!! Quick question about the boat rally..."', 'rally');
+    print('📱  "...when are the fireworks?? 😂😂"', 'rally');
+    print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
+    printBlank();
+    print('   Pick a response:', 'choice');
+    e.opts.forEach((idx, i) => {
+      print(`   [${i+1}] "${FIREWORKS_ANSWERS[idx]}"`, 'choice');
+    });
+    print('   Type: <strong>answer [1-3]</strong>', 'choice');
+  } else {
+    print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
+    print(`📱  INCOMING TEXT: "${e.q}"`, 'rally');
+    print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
+    print('   Type <strong>answer</strong> to respond.', 'choice');
+  }
+}
+
+// ============================================================
+//  COMMANDS
+// ============================================================
+
+function cmdHelp() {
+  printBlank();
+  print('╔══════════════════════════════════════════════════════╗', 'title');
+  print('║           MATT\'S MARKETPLACE HUSTLE - HELP           ║', 'title');
+  print('╚══════════════════════════════════════════════════════╝', 'title');
+  printBlank();
+  print('  <strong>browse</strong>         - Scroll Facebook Marketplace', 'system');
+  print('  <strong>buy [#]</strong>        - Buy listing at asking price', 'system');
+  print('  <strong>negotiate [#]</strong>  - Counter-offer (~20% off). Odds scale with how close to asking.', 'system');
+  print('  <strong>lowball [#]</strong>    - Offer ~50% off. 1-in-5 chance. Costs more energy.', 'system');
+  print('  <strong>sell [#]</strong>       - Sell item from your inventory', 'system');
+  print('  <strong>inventory</strong>      - See what you\'ve got', 'system');
+  print('  <strong>recharge</strong>       - Crack a Bud Light (+energy)', 'system');
+  print('  <strong>restock</strong>        - Buy a 30-pack (-$25, +12 beers)', 'system');
+  print('  <strong>status</strong>         - Full status readout', 'system');
+  print('  <strong>rally</strong>          - Check on boat rally prep', 'system');
+  print('  <strong>prep</strong>           - Work on boat rally prep (-energy, +rally%)', 'system');
+  print('  <strong>next</strong>           - End the week and reset', 'system');
+  print('  <strong>calm</strong>           - Attempt to calm Griffin (reduces bite risk)', 'system');
+  print('  <strong>deal</strong>           - Handle T-Swan', 'system');
+  print('  <strong>upgrade</strong>        - Apply Yeti credit to recalled cooler (3x sell value)', 'system');
+  print('  <strong>answer [#]</strong>     - Respond to fireworks question (1-10)', 'system');
+  print('  <strong>answer</strong>         - Respond to other rally questions', 'system');
+  print('  <strong>help</strong>           - This screen', 'system');
+  printBlank();
+  print('  💡 Press <strong>TAB</strong> to auto-complete any command.', 'choice');
+  printBlank();
+  print('  GOAL: Flip deals for 5 weeks. Prep the rally to 75%+.', 'dim');
+  print('  Keep energy up. Don\'t run dry on Bud Light.', 'dim');
+  print('  The Ying Yang Twins are watching, Matt. Probably.', 'dim');
+  printBlank();
+}
+
+function cmdStatus() {
+  printBlank();
+  print('┌─────────────────────────────────────────────────────┐', 'system');
+  print('│                   STATUS CHECK                       │', 'system');
+  print('└─────────────────────────────────────────────────────┘', 'system');
+  print(`  Matt | Iris Drive | Basketball Shorts | Kirkland Slides`, 'dim');
+  printBar('CASH', Math.min(G.money, 10000), 10000);
+  printBar('ENERGY', G.energy, 100);
+  printBar('BUD LIGHTS', G.budLights, 24);
+  printBar('RALLY PREP', G.rallyPrep, 100);
+  printBar('SUMMER LEFT', G.totalWeeks - G.week, G.totalWeeks);
+  printBlank();
+  print(`  💰 Cash: $${money(G.money)}`, 'money');
+  const profit = G.money - G.startMoney;
+  print(`  📈 Net Profit: $${money(profit)} ${profit >= 0 ? '▲' : '▼'}`, profit >= 0 ? 'money' : 'error');
+  print(`  🍺 Bud Lights consumed: ${G.beersDrunk}`, 'beer');
+  print(`  🐕 Griffin incidents: ${G.griffinCalmAttempts}`, 'griffin');
+  print(`  📱 Rally questions answered: ${G.questionsAnswered}`, 'rally');
+  print(`  🎵 Currently playing: ${G.currentSong} - Ying Yang Twins`, 'special');
+  if(G.biteMeter > 0) print(`  🐕 Griffin Bite Risk: ${G.biteMeter}%`, G.biteMeter >= 60 ? 'error' : 'event');
+  if(G.foundRecalled) print(`  🧊 ⭐ RECALLED YETI: Acquired!`, 'special');
+  printBlank();
+}
+
+function cmdBrowse() {
+  if(G.energy <= 0) { soberGameOver(); return; }
+  generateListings();
+  printBlank();
+  print('┌─────────────────────────────────────────────────────────────┐', 'system');
+  print('│          📱 FACEBOOK MARKETPLACE - IRIS DRIVE AREA          │', 'system');
+  print('└─────────────────────────────────────────────────────────────┘', 'system');
+  G.listings.forEach((item, i) => {
+    const profit_est = Math.round((item.sellMin + item.sellMax)/2) - item.askPrice;
+    const profitStr = profit_est > 0 ? `<span style="color:#00ff88">~$${money(profit_est)} profit</span>` : `<span style="color:#ff4444">risky</span>`;
+    const specialTag = item.special ? ' <span style="color:#ff44ff;animation:blink 0.5s step-end infinite">⚠️ RECALLED!!!</span>' : '';
+    print(`  [${i+1}] ${item.emoji} <strong>${item.name}</strong>${specialTag}`, '');
+    print(`       💲 Asking: $${money(item.askPrice)} | 📝 "${item.condition}" | 👤 ${item.seller}`, 'dim');
+    print(`       Est. flip value: ${profitStr}`, '');
+  });
+  printBlank();
+  print(`  Type <strong>buy [#]</strong> | <strong>negotiate [#]</strong> | <strong>lowball [#]</strong> to deal, or <strong>next</strong> to move on.`, 'choice');
+  G.energy = Math.max(0, G.energy - 5);
+  afterAction();
+}
+
+function cmdBuy(idx) {
+  if(G.listings.length === 0) {
+    print('No listings loaded. Type <strong>browse</strong> first.', 'error');
+    return;
+  }
+  const i = parseInt(idx) - 1;
+  if(isNaN(i) || i < 0 || i >= G.listings.length) {
+    print(`Invalid listing number. Choose 1-${G.listings.length}.`, 'error');
+    return;
+  }
+  const item = G.listings[i];
+  if(G.money < item.askPrice) {
+    print(`You can't afford that. You have $${money(G.money)}, asking $${money(item.askPrice)}.`, 'error');
+    print('Maybe flip something you own first.', 'dim');
+    return;
+  }
+  if(G.energy <= 0) { soberGameOver(); return; }
+
+  // 25% chance recalled Yeti already sold to someone else
+  if(item.special && Math.random() < 0.25) {
+    G.listings.splice(i, 1);
+    printBlank();
+    print('  💨 Someone BEAT YOU to the recalled Yeti.', 'error');
+    print('  Matt watched the other guy load it into a Tahoe.', 'dim');
+    print('  In basketball shorts. Witnessing history. Powerless.', 'dim');
+    G.energy = Math.max(0, G.energy - 5);
+    afterAction();
+    return;
+  }
+
+  G.money -= item.askPrice;
+  G.energy = Math.max(0, G.energy - 15);
+  const acquired = { ...item, paidPrice: item.askPrice };
+  G.inventory.push(acquired);
+
+  if(item.special) {
+    G.foundRecalled = true;
+    printBlank();
+    print('🚨🚨🚨 HOLY COW. 🚨🚨🚨', 'special');
+    print('', '');
+    print(`  You just bought a Yeti Cooler with the MAGNETIC SEAL.`, 'special');
+    print(`  The one that was RECALLED because the lid can seal`, 'special');
+    print(`  a child inside. Matt, this is worth SERIOUS money`, 'special');
+    print(`  to the right collector / liability case investigator.`, 'special');
+    print(`  Paid: $${money(item.askPrice)}. Potential sell: $700-$1,200.`, 'money');
+    print(`  OR: type <strong>upgrade</strong> to apply Yeti credit and triple the value.`, 'special');
+    print('', '');
+    print('  Griffin approves. He is still barking though.', 'griffin');
+  } else {
+    printBlank();
+    print(`  ✅ Bought: ${item.emoji} ${item.name}`, 'money');
+    print(`  Paid: $${money(item.askPrice)} | Cash remaining: $${money(G.money)}`, 'money');
+    print(`  Drove over in slides. Loaded it up. Back home.`, 'dim');
+    print(`  ${G.currentSong} blasting the whole way.`, 'special');
+  }
+  // remove from listings
+  G.listings.splice(i, 1);
+  afterAction();
+}
+
+function cmdNegotiate(idx, isLowball) {
+  if(G.listings.length === 0) {
+    print('No listings loaded. Type <strong>browse</strong> first.', 'error');
+    return;
+  }
+  const i = parseInt(idx) - 1;
+  if(isNaN(i) || i < 0 || i >= G.listings.length) {
+    print(`Invalid listing. Choose 1-${G.listings.length}.`, 'error');
+    return;
+  }
+  const item = G.listings[i];
+  const energyCost = isLowball ? 20 : 10;
+
+  if(G.energy < energyCost) {
+    print(`Not enough energy (need ${energyCost}). Drink a Bud Light.`, 'error');
+    return;
+  }
+
+  // Calculate offer price
+  let offerPct, successChance;
+  if(isLowball) {
+    offerPct = rnd(40, 55) / 100;
+    successChance = 0.20; // exactly 1 in 5
+  } else {
+    // negotiate: 78-93% of asking; odds scale with closeness to asking
+    offerPct = rnd(78, 93) / 100;
+    // 78% offer → ~45% success, 93% offer → ~82% success
+    successChance = 0.45 + ((offerPct - 0.78) / 0.15) * 0.37;
+  }
+
+  const offerPrice = roundPrice(Math.round(item.askPrice * offerPct));
+
+  if(G.money < offerPrice) {
+    print(`Can't afford even your own offer ($${money(offerPrice)}). You have $${money(G.money)}.`, 'error');
+    return;
+  }
+
+  G.energy = Math.max(0, G.energy - energyCost);
+
+  const accepted = Math.random() < successChance;
+
+  printBlank();
+  if(isLowball) {
+    const openers = [
+      `Matt slides on over and offers $${money(offerPrice)}. The seller goes quiet.`,
+      `Matt, Kirkland slides shuffling: "$${money(offerPrice)}. Cash. Today. Final."`,
+      `Matt puts in $${money(offerPrice)} and waits. Griffin barks distantly for moral support.`,
+    ];
+    print(`  🤝 ${pick(openers)}`, 'event');
+  } else {
+    const openers = [
+      `Matt counters at $${money(offerPrice)}.`,
+      `Matt: "How about $${money(offerPrice)}? Cash, today."`,
+      `Matt offers $${money(offerPrice)} and waits with a Bud Light in hand.`,
+    ];
+    print(`  🤝 ${pick(openers)}`, 'event');
+  }
+  print(`     Asking: $${money(item.askPrice)} → Your offer: $${money(offerPrice)} (${Math.round(offerPct*100)}% of asking)`, 'dim');
+  printBlank();
+
+  if(accepted) {
+    G.money -= offerPrice;
+    G.inventory.push({ ...item, paidPrice: offerPrice });
+    G.listings.splice(i, 1);
+    const savings = item.askPrice - offerPrice;
+
+    const accepts = isLowball
+      ? [`Seller: "...Fine. Just come get it."`,
+         `Seller: "Ugh. Yeah. Cash only."`,
+         `Seller: "My wife is going to kill me. Deal."`,
+         `Seller: "You know what, I just want it gone. Fine."`]
+      : [`Seller: "Alright, deal."`,
+         `Seller: "Yeah I can do that. Come pick it up."`,
+         `Seller: "Fair enough. You got it."`,
+         `Seller: "Works for me. Cash at pickup."`];
+    print(`  ✅ ${pick(accepts)}`, 'money');
+    print(`  Paid: $${money(offerPrice)} | Saved: $${money(savings)} off asking`, 'money');
+    if(isLowball) print(`  Matt is driving home absolutely beaming. ${G.currentSong} at full volume.`, 'special');
+  } else {
+    const rejects = isLowball
+      ? [`Seller: "LOL. No."`,
+         `Seller: "Are you serious right now."`,
+         `Seller: "I know what I have. Goodbye."`,
+         `Seller: "Please don't contact me again."`,
+         `Seller has left the conversation.`]
+      : [`Seller: "I can't go that low, sorry."`,
+         `Seller: "No, I need closer to asking."`,
+         `Seller: "I'll pass. Thanks anyway."`,
+         `Seller: "Hmm. No. But thanks."`];
+    print(`  ❌ ${pick(rejects)}`, 'error');
+    if(isLowball) {
+      print(`  Seller blocked Matt. Listing gone. (-8 energy, that stings.)`, 'dim');
+      G.energy = Math.max(0, G.energy - 8);
+      G.listings.splice(i, 1);
+    } else {
+      print(`  Listing still available at $${money(item.askPrice)} if you change your mind.`, 'dim');
+    }
+  }
+
+  afterAction();
+}
+
+function cmdSell(idx) {
+  if(G.inventory.length === 0) {
+    print('Nothing in inventory to sell. Browse and buy something first.', 'error');
+    return;
+  }
+  if(idx === undefined || idx === '') {
+    cmdInventory();
+    print('Type <strong>sell [#]</strong> to sell an item.', 'choice');
+    return;
+  }
+  const i = parseInt(idx) - 1;
+  if(isNaN(i) || i < 0 || i >= G.inventory.length) {
+    print(`Invalid item number. You have ${G.inventory.length} item(s).`, 'error');
+    return;
+  }
+  const item = G.inventory[i];
+  const sellPrice = rnd(item.sellMin, item.sellMax);
+  const profit = sellPrice - item.paidPrice;
+
+  G.money += sellPrice;
+  G.totalProfit += profit;
+  G.inventory.splice(i, 1);
+  G.energy = Math.max(0, G.energy - 10);
+
+  printBlank();
+  print(`  💸 SOLD: ${item.emoji} ${item.name}`, 'money');
+  print(`  Paid: $${money(item.paidPrice)} → Sold: $${money(sellPrice)}`, 'money');
+  if(profit > 0) {
+    print(`  PROFIT: +$${money(profit)} 💰 GET SOME.`, 'money');
+    if(profit > 500) print('  That\'s a big one. Matt is FIRED UP.', 'special');
+    if(item.special) {
+      print('  The recalled Yeti found a new home. No questions asked.', 'dim');
+      print('  Matt may or may not have mentioned the recall. He did not.', 'dim');
+    }
+  } else {
+    print(`  LOSS: $${money(Math.abs(profit))} in the hole. Shake it off.`, 'error');
+    print('  Sometimes the market just isn\'t there.', 'dim');
+  }
+  afterAction();
+}
+
+function cmdInventory() {
+  printBlank();
+  print('┌──────────────────────────────────────────────────┐', 'system');
+  print('│                  YOUR INVENTORY                  │', 'system');
+  print('└──────────────────────────────────────────────────┘', 'system');
+  if(G.inventory.length === 0) {
+    print('  Nothing. The garage is empty. The grind continues.', 'dim');
+  } else {
+    G.inventory.forEach((item, i) => {
+      const est = Math.round((item.sellMin + item.sellMax)/2);
+      const tag = item.special ? ' ⭐ RECALLED' : '';
+      print(`  [${i+1}] ${item.emoji} ${item.name}${tag}`, '');
+      print(`       Paid: $${money(item.paidPrice)} | Est. sell: $${money(est)}`, 'dim');
+    });
+    const totalInv = G.inventory.reduce((s,i)=>s+Math.round((i.sellMin+i.sellMax)/2),0);
+    print(`  Total inventory value: ~$${money(totalInv)}`, 'money');
+  }
+  printBlank();
+}
+
+function cmdDrink() {
+  if(G.budLights <= 0) {
+    printBlank();
+    print('  🚨 OUT OF BUD LIGHT. 🚨', 'error');
+    print('  This is an emergency. Type <strong>restock</strong> immediately.', 'error');
+    print('  Matt is running on fumes and spite.', 'dim');
+    return;
+  }
+  G.budLights--;
+  G.beersDrunk++;
+  const energyGain = rnd(15, 30);
+  G.energy = Math.min(100, G.energy + energyGain);
+
+  if(G.budLights === 0) {
+    const oldPrep = G.rallyPrep;
+    G.rallyPrep = Math.max(0, Math.floor(G.rallyPrep / 2));
+    printBlank();
+    print('  🚨🚨 LAST BUD LIGHT CONSUMED. 🚨🚨', 'error');
+    print('  Word spread to the rally crew: no drinks for the boat rally.', 'error');
+    print('  The Facebook event comments are not kind.', 'error');
+    print(`  Rally prep CUT IN HALF: ${oldPrep}% → ${G.rallyPrep}%`, 'error');
+    print('  Type <strong>restock</strong> before this gets worse.', 'error');
+    updateStatus();
+  }
+
+  const beerLines = [
+    'CRACK. HISS. That\'s the sound of productivity.',
+    'Ice cold. Perfect. The Ying Yang Twins would approve.',
+    'Kirkland slides shuffling to the fridge. Bud Light acquired.',
+    'Nothing hits like a Bud Light at 10am on a Saturday.',
+    'Matt cracks #' + G.beersDrunk + '. Griffin watches approvingly.',
+    'The fuel of champions. Or at least of Matt.',
+    'Bud Light: Recommended by 9 out of 10 Iris Drive residents.',
+    'CRACK. CHUG. Profit.',
+  ];
+
+  printBlank();
+  print(`  🍺 ${pick(beerLines)}`, 'beer');
+  print(`  Energy: +${energyGain} | Bud Lights left: ${G.budLights}`, 'beer');
+  if(G.budLights <= 2) print('  ⚠️  Running low. Type <strong>restock</strong>.', 'event');
+  updateStatus();
+}
+
+function cmdRestock() {
+  if(G.money < 25) {
+    print('Can\'t afford a 30-pack right now ($25). Get flipping.', 'error');
+    return;
+  }
+  G.money -= 25;
+  G.budLights += 12;
+  print('', '');
+  print('  🍺 30-pack acquired from Costco. Kirkland brand naturally.', 'beer');
+  print('  Cost: $25 | +12 Bud Lights. The garage fridge is restocked.', 'beer');
+  updateStatus();
+}
+
+function cmdUpgrade() {
+  const idx = G.inventory.findIndex(i => i.id === 'yeti_recalled' && !i.upgraded);
+  if(idx === -1) {
+    print('No recalled Yeti cooler in inventory to upgrade. Buy one first.', 'error');
+    return;
+  }
+  const item = G.inventory[idx];
+  item.upgraded = true;
+  item.name = '🧊⭐ Yeti Cooler — UPGRADED (Yeti Credit Applied)';
+  item.sellMin = item.sellMin * 3;
+  item.sellMax = item.sellMax * 3;
+  printBlank();
+  print('  🧊 YETI CREDIT APPLIED.', 'special');
+  print('  The recalled cooler has been "officially resolved" and upgraded', 'special');
+  print('  to a Limited Collector\'s Edition Magnetic Closure model.', 'special');
+  print('  Yeti\'s legal team may have questions. Matt does not.', 'dim');
+  print(`  New sell value: $${money(item.sellMin)}–$${money(item.sellMax)}`, 'money');
+}
+
+function griffinBiteGameOver() {
+  G.phase = 'over';
+  printBlank();
+  print('╔═══════════════════════════════════════════════════════╗', 'error');
+  print('║       GRIFFIN BIT SOMEONE. LAWSUIT FILED.            ║', 'error');
+  print('║                    GAME OVER                         ║', 'error');
+  print('╚═══════════════════════════════════════════════════════╝', 'error');
+  printBlank();
+  const victims = ['the mailman','a jogger','Dave from down the street','the Amazon guy','a child on a bike'];
+  print(`  Griffin got loose and bit ${pick(victims)}.`, 'error');
+  print('  Attorney retained within the hour.', 'error');
+  print('  Matt served papers while holding a Bud Light.', 'dim');
+  printBlank();
+  print('  His phone rings. Unknown number. Atlanta area code.', 'event');
+  printBlank();
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  print('  KAINE: "Yo. We heard about the dog situation."', 'special');
+  print('  D-ROC: "You got sued, Matt."', 'special');
+  print('  MATT:  "I know."', 'money');
+  print('  KAINE: "We heard every time Griffin barked you just... left."', 'special');
+  print('  D-ROC: "Just walked away. Didn\'t even try."', 'special');
+  print('  KAINE: "Bro. The slides were right there."', 'special');
+  print('  D-ROC: "You could\'ve just said something to the dog."', 'special');
+  print('  KAINE: "Anything. One word. \'Sit.\' That\'s it."', 'special');
+  print('  D-ROC: "\'Griffin.\' Just his name. His own name."', 'special');
+  print('  MATT:  "..."', 'money');
+  print('  KAINE: "The boat rally is cancelled, by the way."', 'special');
+  print('  D-ROC: "HOA shut it down. Liability."', 'special');
+  print('  KAINE: "We\'re not coming."', 'special');
+  print('  D-ROC: "Goodbye, Matt."', 'special');
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  printBlank();
+  print('  Griffin is currently barking at the process server.', 'griffin');
+  print('  Nobody stops him.', 'dim');
+  printBlank();
+  print('  Refresh to try again. Maybe talk to the dog this time.', 'dim');
+  document.getElementById('cmd-input').disabled = true;
+  document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+}
+
+function soberGameOver() {
+  G.phase = 'over';
+  printBlank();
+  print('╔═══════════════════════════════════════════════════════╗', 'error');
+  print('║              MATT LOST INTEREST.                     ║', 'error');
+  print('║                   GAME OVER                          ║', 'error');
+  print('╚═══════════════════════════════════════════════════════╝', 'error');
+  printBlank();
+  print('  Energy: 0%.', 'error');
+  print('  Matt sat down in the driveway.', 'dim');
+  print('  The Kirkland slides felt heavy.', 'dim');
+  print('  The marketplace listings blurred into nothing.', 'dim');
+  printBlank();
+  print('  The hustle just... stopped.', 'error');
+  print('  He looked at the garage. He looked at the listings.', 'dim');
+  print('  He looked at Griffin, who was barking at a pinecone.', 'griffin');
+  printBlank();
+  print('  "Maybe next summer," Matt said to no one.', 'event');
+  print('  Nobody answered. The Ying Yang Twins were not there.', 'lose');
+  print('  The boat rally felt like someone else\'s problem.', 'lose');
+  printBlank();
+  print('  Matt went inside. Put on regular music.', 'error');
+  print('  The summer continued without him.', 'dim');
+  printBlank();
+  print('  Refresh and try again. Matt\'s got more hustle in him.', 'dim');
+  document.getElementById('cmd-input').disabled = true;
+  document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+}
+
+function cmdDeal() {
+  if(!G.pendingEvent || G.pendingEvent.type !== 'tswam') {
+    print('T-Swan isn\'t here right now. Give it a minute.', 'dim');
+    return;
+  }
+  G.energy = Math.max(0, G.energy - 6);
+  const reply = pick(TSWAM_MATT_REPLIES);
+  const outcomes = [
+    'T-Swan nods slowly, points finger-guns, and shuffles back toward the street.',
+    'T-Swan says "yeah yeah yeah" and disappears around the side of the house.',
+    'T-Swan squints, processes this, and wanders off. Griffin watches him go.',
+    'T-Swan: "Okay okay okay." He leaves. Slowly. Very slowly.',
+    'T-Swan gives a thumbs up and backs away. He trips on the curb. He\'s fine.',
+    'T-Swan vanishes. It\'s unclear where he went. Best not to think about it.',
+  ];
+  printBlank();
+  print(`  🗣️  ${reply}`, 'error');
+  print(`  ...${pick(outcomes)}`, 'dim');
+  G.pendingEvent = null;
+  afterAction();
+}
+
+
+function cmdCalm() {
+  if(!G.pendingEvent || G.pendingEvent.type !== 'griffin') {
+    print('Griffin isn\'t currently melting down. Give him a minute.', 'dim');
+    return;
+  }
+  G.energy = Math.max(0, G.energy - 14);
+  G.griffinCalmAttempts++;
+  const response = pick(SARCASTIC_CALM);
+  const works = Math.random() < 0.15;
+  printBlank();
+  print(`  🗣️  Matt: "${response}"`, 'griffin');
+  print('', '');
+  if(works) {
+    print('  ...Griffin actually stopped barking. Unprecedented.', 'griffin');
+    print('  He is now sitting. Looking proud of himself.', 'griffin');
+    G.biteMeter = Math.max(0, G.biteMeter - 22);
+  } else {
+    const outcomes = [
+      'Griffin is still going. He has entered hour two.',
+      'Griffin paused for one second, then resumed louder.',
+      'Griffin looked at Matt. Then barked at him too.',
+      'Griffin is now chasing the neighbor down the street.',
+      'Matt\'s neighbor across the street just posted in the neighborhood Facebook group.',
+      'Griffin has evolved. He is now barking AND spinning.',
+      'The mailman is never coming back to this house.',
+    ];
+    print(`  ...${pick(outcomes)}`, 'griffin');
+    // Trying still helps — even failed calms reduce bite risk slightly
+    G.biteMeter = Math.max(0, G.biteMeter - 5);
+  }
+  // Always show bite risk after calm attempt
+  if(G.biteMeter > 0) {
+    print(`  🐕 Griffin bite risk: ${G.biteMeter}%`, G.biteMeter >= 40 ? 'error' : 'event');
+  } else {
+    print('  🐕 Griffin bite risk: clear.', 'dim');
+  }
+  G.pendingEvent = null;
+  afterAction();
+}
+
+function cmdAnswer(num) {
+  if(!G.pendingEvent || (G.pendingEvent.type !== 'fireworks' && G.pendingEvent.type !== 'rally')) {
+    print('No pending question to answer. Check your phone later.', 'dim');
+    return;
+  }
+
+  G.questionsAnswered++;
+  // only rally questions contribute to prep — fireworks are unrelated
+  if(G.pendingEvent.type !== 'fireworks') {
+    G.rallyPrep = Math.min(100, G.rallyPrep + rnd(3,7));
+  }
+
+  if(G.pendingEvent.type === 'fireworks') {
+    const n = parseInt(num);
+    const opts = G.pendingEvent.opts || [0,1,2];
+    if(isNaN(n) || n < 1 || n > opts.length) {
+      print(`Pick a number 1-${opts.length}.`, 'error');
+      return;
+    }
+    const ans = FIREWORKS_ANSWERS[opts[n-1]];
+    printBlank();
+    print('  📱 Matt types back (basketball shorts, Bud Light, Kirkland slides):', 'rally');
+    print('', '');
+    print(`  Matt: "${ans}"`, 'money');
+    print('', '');
+    const reactions = [
+      '  They stare at Matt for a moment. Then wander back toward the street.',
+      '  They point finger-guns at Matt and walk away sideways.',
+      '  They nod very slowly, like they understood. They did not understand.',
+      '  They respond: "okaaaay" and trip over the garden hose.',
+      '  They squint. Process. Shuffle away. The nightmare is over.',
+      '  They look at Matt for 4 full seconds. Then go back to their yard.',
+    ];
+    print(pick(reactions), 'dim');
+  } else {
+    const e = G.pendingEvent;
+    printBlank();
+    print(`  📱 Them: "${e.q}"`, 'rally');
+    print(`  Matt: "${e.a}"`, 'money');
+    print('  Sent.', 'dim');
+  }
+
+  G.pendingEvent = null;
+  afterAction();
+}
+
+function cmdPrep() {
+  if(G.energy <= 0) { soberGameOver(); return; }
+  if(G.weeklyPrepGained >= 25) {
+    print('  You\'ve done all the rally prep you can this week. Come back next week.', 'event');
+    print('  Matt needs to pace himself. And drink more Bud Light.', 'dim');
+    return;
+  }
+  G.energy = Math.max(0, G.energy - 20);
+  const remaining = 25 - G.weeklyPrepGained;
+  const gain = Math.min(rnd(8, 18), remaining);
+  G.weeklyPrepGained += gain;
+  G.rallyPrep = Math.min(100, G.rallyPrep + gain);
+
+  const prepTasks = [
+    'Sent out the Ying Yang Twins theme announcement. People are hyped.',
+    'Called about the dock permit. On hold for 45 minutes. In slides.',
+    'Ordered Ying Yang Twins flag for the boat. Premium.',
+    'Mapped out the fireworks timing. 9pm. It\'s always 9pm.',
+    'Coordinated with Terry about the sound system. It\'s going to be LOUD.',
+    'Made a Facebook event. 47 people already asked about fireworks.',
+    'Sourced a second BBQ. Rally-grade capacity now achieved.',
+    'Confirmed the Ying Yang Twins playlist. In order. No skips.',
+    'Got the ice situation handled. Yeti coolers were involved.',
+    'Touched base with the HOA. They said "please keep the music down." Noted.',
+    'Printed the Iris Drive Boat Rally schedule. Laminated.',
+  ];
+
+  printBlank();
+  print(`  🎉 Rally Prep +${gain}%`, 'rally');
+  print(`  ${pick(prepTasks)}`, 'rally');
+  print(`  Overall prep: ${G.rallyPrep}%`, 'rally');
+
+  // 1-in-10 chance of unexpected rally expense
+  if(Math.random() < 0.10) {
+    const lossPct = pick([10, 20, 30, 40]);
+    const loss = Math.round(G.money * lossPct / 100);
+    G.money = Math.max(0, G.money - loss);
+    const expenses = [
+      'The Ying Yang Twins\' rider just came in. It is extensive. Rider includes: specific snacks, specific lighting, specific temperature requirements.',
+      'Catering deposit due. Non-refundable. Nobody discussed this with Matt.',
+      'Dock rental fee + Iris Drive "premium event surcharge." Not a real thing. Paid anyway.',
+      'Someone ordered custom YYT merch for the rally. That someone was Matt. At 2am.',
+      'Sound system upgrade deposit. The good one. Matt approved it in slides.',
+      'Fireworks guy wants a down payment or he\'s going to the Millbrook event instead.',
+      'Insurance rider for the boat rally. Apparently required. Found out today.',
+    ];
+    printBlank();
+    print(`  💸 UNPLANNED EXPENSE: ${pick(expenses)}`, 'error');
+    print(`  Lost ${lossPct}% of cash: -$${money(loss)} | Remaining: $${money(G.money)}`, 'error');
+  }
+
+  afterAction();
+}
+
+function cmdRally() {
+  printBlank();
+  print('┌────────────────────────────────────────────────────┐', 'rally');
+  print('│         🎉 IRIS DRIVE BOAT RALLY STATUS 🎉          │', 'rally');
+  print('└────────────────────────────────────────────────────┘', 'rally');
+  print(`  Theme: YING YANG TWINS (confirmed, immovable, non-negotiable)`, 'rally');
+  print(`  Date: End of Week 5. It is coming.`, 'rally');
+  print(`  Fireworks: They will happen. At a time. That is all.`, 'rally');
+  printBar('PREP LEVEL', G.rallyPrep, 100);
+  printBlank();
+  const weeksLeft = G.totalWeeks - G.week;
+  if(G.rallyPrep < 50 && weeksLeft <= 1) {
+    print('  ⚠️  One week left and you\'re not ready. Classic Matt.', 'event');
+  } else if(G.rallyPrep >= 100) {
+    print('  ✅ FULLY PREPPED. The rally is going to be legendary.', 'money');
+  } else {
+    print(`  ${weeksLeft} week(s) to get to 100%. Type <strong>prep</strong> to work on it.`, 'dim');
+  }
+  printBlank();
+}
+
+function cmdNext() {
+  // Check for unresolved events
+  if(G.pendingEvent) {
+    if(G.pendingEvent.type === 'griffin') {
+      // Don't hard-block — but advancing without calming raises bite risk
+      G.biteMeter = Math.min(100, G.biteMeter + rnd(8, 14));
+      print(`  🐕 Griffin is still going. Bite risk crept up to ${G.biteMeter}%.`, 'griffin');
+      if(Math.random() < G.biteMeter / 350) { griffinBiteGameOver(); return; }
+      G.pendingEvent = null; // clear so week can advance
+    } else if(G.pendingEvent.type === 'tswam') {
+      print('T-Swan is still out there. Type <strong>deal</strong> to handle him.', 'error');
+    } else {
+      print('Someone is waiting on a reply about the rally. Type <strong>answer</strong> first.', 'rally');
+    }
+    return;
+  }
+
+  G.week++;
+  G.actionsTaken = 0;
+  G.weeklyPrepGained = 0;
+  G.listings = [];
+  G.currentSong = pick(YYT_SONGS);
+
+  // Between weeks: full rest, fridge raid
+  G.energy = Math.min(100, G.energy + rnd(40, 65));
+  if(coin(0.35)) G.budLights = Math.max(0, G.budLights - 1);
+
+  printBlank();
+  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
+  print(`  💤 Week ${G.week-1} in the books. Matt collapses on the couch.`, 'dim');
+  const wakeLines = [
+    'Griffin barks at 6am Monday. The grind resumes.',
+    'Matt wakes up to 11 new Facebook Marketplace messages. Classic.',
+    'Kirkland slides: still by the door. Still ugly. Still perfect.',
+    'Matt browses Marketplace before getting out of bed. Priorities are clear.',
+    'Six people texted about the boat rally over the weekend.',
+    'The garage fridge humming. Inventory waiting. Another week.',
+  ];
+  print(`  ${pick(wakeLines)}`, 'dim');
+  print(`  🎵 Week ${G.week} anthem: ${G.currentSong} - Ying Yang Twins`, 'special');
+  print(`  ══ WEEK ${G.week} OF ${G.totalWeeks} ══`, 'title');
+  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
+
+  // Check end condition
+  if(G.week > G.totalWeeks) {
+    endGame();
+    return;
+  }
+
+  // Milestone messages
+  if(G.week === G.totalWeeks) {
+    printBlank();
+    print('🚨🚨 FINAL WEEK. THE BOAT RALLY IS THIS WEEKEND. 🚨🚨', 'win');
+    print('   Wrap up your deals. Prep that rally. Iris Drive is watching.', 'event');
+  }
+
+  if(G.budLights === 0) {
+    printBlank();
+    print('⚠️  CRITICAL: No Bud Lights remaining. Matt is running on vibes alone.', 'error');
+    print('   Type <strong>restock</strong> ($25) immediately.', 'error');
+  }
+
+  updateStatus();
+}
+
+// ============================================================
+//  END GAME
+// ============================================================
+function endGame() {
+  G.phase = 'over';
+  const profit = G.money - G.startMoney;
+  const rallyOk = G.rallyPrep >= 75;
+
+  printBlank();
+  print('═══════════════════════════════════════════════════════', 'title');
+  print('               🏖️  SUMMER IS OVER  🏖️', 'title');
+  print('═══════════════════════════════════════════════════════', 'title');
+  printBlank();
+  print(`  💰 Net Profit: $${money(profit)}`, profit > 0 ? 'money' : 'error');
+  print(`  🎉 Rally Prep: ${G.rallyPrep}%`, rallyOk ? 'money' : 'error');
+  print(`  🍺 Bud Lights consumed: ${G.beersDrunk}`, 'beer');
+  print(`  🐕 Griffin incidents handled: ${G.griffinCalmAttempts}`, 'griffin');
+  print(`  📱 Rally questions answered: ${G.questionsAnswered}`, 'rally');
+  if(G.foundRecalled) print('  🧊 ⭐ Recalled Yeti successfully flipped', 'special');
+  printBlank();
+
+  if(!rallyOk) {
+    printRallyFail(profit);
+  } else if(profit >= 40000) {
+    printEndingLegendary(profit);
+  } else if(profit >= 25000) {
+    printEndingGood(profit);
+  } else if(profit >= 12000) {
+    printEndingDecent(profit);
+  } else {
+    printEndingPoor(profit);
+  }
+
+  document.getElementById('cmd-input').disabled = true;
+  document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+}
+
+// ── Rally failed (prep < 75%) ────────────────────────────────
+function printRallyFail(profit) {
+  print('╔═══════════════════════════════════════════════════════╗', 'lose');
+  print('║            THE RALLY WAS NOT READY, MATT             ║', 'lose');
+  print('╚═══════════════════════════════════════════════════════╝', 'lose');
+  printBlank();
+  print(`  Rally prep: ${G.rallyPrep}%. Needed 75%.`, 'error');
+  print('  The event happened. People showed up.', 'dim');
+  print('  There was no real organization.', 'dim');
+  print('  Someone brought their own speaker and played country.', 'error');
+  print('  NOT THE YING YANG TWINS. Country.', 'error');
+  print('  Griffin bit a lawn chair.', 'griffin');
+  printBlank();
+  print('  The Ying Yang Twins heard about it through the grapevine.', 'lose');
+  print('  They chose not to comment.', 'dim');
+  printBlank();
+  print('  Matt stood in his driveway for a long time after.', 'lose');
+  print('  Kirkland slides. Basketball shorts. Warm Bud Light.', 'dim');
+  print(`  Net profit of $${money(profit)} sitting in his pocket, going nowhere.`, 'dim');
+  printBlank();
+  print('  "Next summer," Matt said to Griffin.', 'event');
+  print('  Griffin barked at the moon.', 'griffin');
+  print('  Refresh to try again.', 'dim');
+}
+
+// ── Rally ok, profit < $5000: garage gets roasted ────────────
+function printEndingPoor(profit) {
+  print('╔═══════════════════════════════════════════════════════╗', 'lose');
+  print('║         THEY CAME. THEY SAW. THEY JUDGED.            ║', 'lose');
+  print('╚═══════════════════════════════════════════════════════╝', 'lose');
+  printBlank();
+  print('  The rally was fine. Theme was right. Music slapped.', 'dim');
+  print('  And then two days later. A knock.', 'dim');
+  printBlank();
+  print('  Matt opens the door. Slides on. Bud Light. The usual.', 'dim');
+  print('  The garage door is open behind him.', 'error');
+  printBlank();
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  print('  KAINE: "Yo. You Matt from the rally?"', 'special');
+  print('  MATT:  "Yeah."', 'money');
+  print('  D-ROC: *stares directly into the garage*', 'special');
+  print('  D-ROC: "..."', 'special');
+  print('  D-ROC: "Bro."', 'special');
+  print('  KAINE: *also staring* "Is that a kayak with no paddle?"', 'special');
+  print('  D-ROC: "And a BBQ with no lid?"', 'special');
+  print('  KAINE: "And is that a scooter that\'s been spray painted?"', 'special');
+  print('  D-ROC: "Matt. What is this. What are we looking at right now."', 'special');
+  print('  KAINE: "You made $' + money(profit) + ' this whole summer."', 'special');
+  print('  D-ROC: "Five. Weeks. Of. Hustling."', 'special');
+  print('  KAINE: "My man T-Pain made more than this selling funnel cakes."', 'special');
+  print('  D-ROC: "This garage looks like a storage unit that gave up on itself."', 'special');
+  print('  KAINE: "It smells like Bud Light and missed opportunity in here."', 'special');
+  print('  D-ROC: "There is a golf club with DUCT TAPE on the grip, Matt."', 'special');
+  print('  KAINE: "We drove here from Atlanta."', 'special');
+  print('  D-ROC: "We drove here from ATLANTA for THIS."', 'special');
+  print('  MATT:  "...the rally was good though."', 'money');
+  print('  KAINE: *long pause*', 'special');
+  print('  KAINE: "Close the garage, Matt."', 'special');
+  print('  D-ROC: "Please close the garage."', 'special');
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  printBlank();
+  print('  They left without saying goodbye.', 'lose');
+  print('  D-Roc took a photo of the garage on the way out.', 'error');
+  print('  It was posted somewhere. Matt doesn\'t know where. Doesn\'t want to.', 'error');
+  print('  Griffin barked at their car until it was fully out of sight.', 'griffin');
+  printBlank();
+  print('  Matt stood in the driveway for a very long time.', 'lose');
+  print('  Kirkland slides. Basketball shorts. Empty Bud Light.', 'dim');
+  print('  The garage door still open.', 'error');
+  print('  The duct-taped golf club visible from the street.', 'error');
+  printBlank();
+  print('  Refresh to redeem yourself.', 'dim');
+}
+
+// ── Rally ok, profit $1000-$2499: decent run ────────────────
+function printEndingDecent(profit) {
+  print('╔═══════════════════════════════════════════════════════╗', 'event');
+  print('║           NOT BAD. NOT GREAT. RESPECTABLE.           ║', 'event');
+  print('╚═══════════════════════════════════════════════════════╝', 'event');
+  printBlank();
+  print('  The rally crushed. Ying Yang Twins theme wall to wall.', 'rally');
+  print('  Fireworks happened. When they happened.', 'dim');
+  print('  Griffin barked at 6 boats. A personal best.', 'griffin');
+  printBlank();
+  print('  ...Two days later. Knock at the door.', 'event');
+  printBlank();
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  print('  KAINE: "Yo Matt. We heard the rally. Good look."', 'special');
+  print('  D-ROC: "Seriously. The theme was correct."', 'special');
+  print('  MATT:  "Appreciate it."', 'money');
+  print('  KAINE: *peers into garage* "Not bad. Not bad at all."', 'special');
+  print('  D-ROC: "$' + money(profit) + ' profit. You hustled."', 'special');
+  print('  KAINE: "We\'re about to grab lunch. You want in?"', 'special');
+  print('  MATT:  "Yeah."', 'money');
+  print('  D-ROC: "Cool. You\'re buying though."', 'special');
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  printBlank();
+  print('  Matt went to lunch with the Ying Yang Twins.', 'money');
+  print('  In basketball shorts and Kirkland slides.', 'dim');
+  print('  Griffin destroyed a lawn ornament while he was gone.', 'griffin');
+  printBlank();
+  print('  Not legendary. But not nothing.', 'event');
+  print('  Refresh to aim higher.', 'dim');
+}
+
+// ── Rally ok, profit $2500-$3999: good run ──────────────────
+function printEndingGood(profit) {
+  print('╔═══════════════════════════════════════════════════════╗', 'win');
+  print('║           MATT DID REAL GOOD THIS SUMMER             ║', 'win');
+  print('╚═══════════════════════════════════════════════════════╝', 'win');
+  printBlank();
+  print('  The rally was LEGENDARY. Iris Drive will talk about it.', 'win');
+  print('  The Ying Yang Twins theme echoed across the water.', 'win');
+  print('  Fireworks went off. At their time. As planned.', 'dim');
+  print('  Griffin bit a buoy and let go. Growth.', 'griffin');
+  printBlank();
+  print('  ...Two days later. Knock at the door.', 'event');
+  printBlank();
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  print('  KAINE: "Matt. FROM THE BOAT RALLY."', 'special');
+  print('  D-ROC: "Bro we heard every song from across the lake."', 'special');
+  print('  KAINE: "And we heard you\'re out here flipping deals."', 'special');
+  print('  D-ROC: "$' + money(profit) + ' profit. Boats, coolers, ATVs..."', 'special');
+  print('  MATT:  "Yep."', 'money');
+  print('  KAINE: "We\'re going surfing tomorrow. You in?"', 'special');
+  print('  MATT:  "Yeah."', 'money');
+  print('  D-ROC: "Bring your board. And some Bud Lights."', 'special');
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  printBlank();
+  print('  🌊 Matt surfed with the Ying Yang Twins.', 'win');
+  print('  Basketball shorts. Kirkland slides on the beach.', 'dim');
+  print('  Ice cold Bud Lights. The garage full of potential.', 'beer');
+  print('  Griffin barked at every wave.', 'griffin');
+  printBlank();
+  print('  ★  SOLID ENDING  ★  One tier left. Refresh and go get it.', 'win');
+}
+
+// ── Rally ok, profit $4000+: LEGENDARY ──────────────────────
+function printEndingLegendary(profit) {
+  print('╔═══════════════════════════════════════════════════════╗', 'win');
+  print('║        ★ ★ ★  LEGENDARY SUMMER  ★ ★ ★               ║', 'win');
+  print('╚═══════════════════════════════════════════════════════╝', 'win');
+  printBlank();
+  print('  The Iris Drive Boat Rally entered the history books.', 'win');
+  print('  Ying Yang Twins catalog, front to back, no skips.', 'win');
+  print('  Fireworks happened exactly when they happened.', 'dim');
+  print('  Half the neighborhood cried. Nobody admits it.', 'dim');
+  print('  Griffin barked at the fireworks. Proudly.', 'griffin');
+  printBlank();
+  print('  💰 $' + money(profit) + ' profit. Matt didn\'t even count it all.', 'money');
+  printBlank();
+  print('  ...Two days later. The doorbell.', 'event');
+  print('  Matt shuffles to the door. Kirkland slides. Ball shorts.', 'dim');
+  print('  Bud Light in hand at 10am. Griffin immediately loses his mind.', 'griffin');
+  printBlank();
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  print('  KAINE: "MATT. Iris Drive. The LEGEND."', 'special');
+  print('  D-ROC: "Bro. We drove here. From Atlanta."', 'special');
+  print('  KAINE: "That rally. That money. The whole vibe."', 'special');
+  print('  D-ROC: "This is the most Matt thing we\'ve ever seen."', 'special');
+  print('  MATT:  "Griffin, SIT."', 'griffin');
+  print('  Griffin: *does not sit*', 'griffin');
+  print('  KAINE: "We like the dog."', 'special');
+  print('  D-ROC: "Okay here\'s the thing. We\'re going surfing."', 'special');
+  print('  KAINE: "You\'re coming. And we\'re staying for a week."', 'special');
+  print('  D-ROC: "Also—" *pulls out case of Bud Light* "—on us."', 'special');
+  print('  KAINE: "We\'re stocking your fridge. For life, basically."', 'special');
+  print('  D-ROC: "And we\'ll watch Griffin while you\'re out there."', 'special');
+  print('  GRIFFIN: *barks directly at D-Roc\'s face*', 'griffin');
+  print('  D-ROC: "...we\'ll figure Griffin out."', 'special');
+  print('  ─────────────────────────────────────────────────────', 'dim');
+  printBlank();
+  print('  🌊 Matt surfs with the Ying Yang Twins.', 'win');
+  print('  🍺 Bud Light supply: unlimited. Funded. Forever.', 'beer');
+  print('  🐕 Griffin is being babysat by D-Roc.', 'griffin');
+  print('     D-Roc and Griffin stare at each other from across the yard.', 'dim');
+  print('     Neither blinks. This will go on for hours.', 'dim');
+  print('  👟 Kirkland slides on the beach. Basketball shorts in the surf.', 'dim');
+  printBlank();
+  print('          ★ ★ ★  LEGENDARY ENDING ACHIEVED  ★ ★ ★', 'win');
+  print('  Refresh to do it again. You won\'t top this. But try.', 'dim');
+}
+
+// ============================================================
+//  INPUT HANDLER
+// ============================================================
+function processCommand(raw) {
+  const input = raw.trim();
+  if(!input) return;
+
+  // Echo command
+  print(`&gt; ${input}`, 'prompt-echo');
+
+  if(G.phase === 'over') {
+    print('The summer is over. Refresh to play again.', 'dim');
+    return;
+  }
+
+  const parts = input.toLowerCase().split(/\s+/);
+  const cmd = parts[0];
+  const arg = parts.slice(1).join(' ');
+
+  switch(cmd) {
+    case 'help': case 'h': case '?':
+      cmdHelp(); break;
+    case 'browse': case 'scroll': case 'b': case 'marketplace': case 'fb': case 'search':
+      cmdBrowse(); break;
+    case 'buy': case 'purchase': case 'get':
+      cmdBuy(arg); break;
+    case 'negotiate': case 'counter': case 'offer':
+      cmdNegotiate(arg, false); break;
+    case 'lowball': case 'lb': case 'lowbll':
+      cmdNegotiate(arg, true); break;
+    case 'sell': case 's':
+      cmdSell(arg); break;
+    case 'inventory': case 'inv': case 'i': case 'items': case 'garage':
+      cmdInventory(); break;
+    case 'recharge': case 'drink': case 'crack': case 'beer': case 'bud': case 'fuel':
+      cmdDrink(); break;
+    case 'restock': case 'costco': case 'beer-run':
+      cmdRestock(); break;
+    case 'status': case 'stats': case 'me': case 'matt':
+      cmdStatus(); break;
+    case 'deal': case 'tswan': case 't-swan': case 'tswam':
+      cmdDeal(); break;
+    case 'upgrade': case 'yeti':
+      cmdUpgrade(); break;
+    case 'truelime':
+      if(!G.trueLimeUsed) {
+        G.trueLimeUsed = true;
+        G.money += 420;
+        printBlank();
+        print('  🟢 ...huh.', 'special');
+        print('  $420 appeared in Matt\'s pocket.', 'money');
+        print('  He doesn\'t question it. The slides stay on.', 'dim');
+        updateStatus();
+      } else {
+        print('  Already squeezed.', 'dim');
+      }
+      break;
+    case 'calm': case 'quiet': case 'griffin': case 'griff': case 'dog':
+      cmdCalm(); break;
+    case 'answer': case 'reply': case 'respond': case 'text': case 'ans':
+      cmdAnswer(arg); break;
+    case 'rally': case 'event': case 'boat': case 'boatrally':
+      cmdRally(); break;
+    case 'prep': case 'organize': case 'plan': case 'work':
+      cmdPrep(); break;
+    case 'next': case 'sleep': case 'week': case 'n': case 'end': case 'done':
+      cmdNext(); break;
+    default:
+      const unknowns = [
+        `Unknown command: "${input}". Type <strong>help</strong>.`,
+        `Matt looked up from his phone. "What?"`,
+        `${input}? Not a thing. Try <strong>help</strong>.`,
+        `Griffin barked in confusion.`,
+        `The Ying Yang Twins could not be reached for comment on this command.`,
+      ];
+      print(pick(unknowns), 'error');
+  }
+}
+
+// ── YouTube soundtrack ──────────────────────────────────────
+let ytLoaded = false;
+function loadYT() {
+  if(ytLoaded) return;
+  ytLoaded = true;
+  document.getElementById('yt-frame').src =
+    'https://www.youtube.com/embed/bls9j98gFRw?autoplay=1&rel=0';
+  document.getElementById('yt-label').textContent = '🎵 SOUNDTRACK ▼';
+}
+function toggleYT() {
+  const dock = document.getElementById('yt-dock');
+  if(!ytLoaded) { loadYT(); return; }
+  const collapsed = dock.classList.toggle('collapsed');
+  document.getElementById('yt-label').textContent =
+    collapsed ? '🎵 SOUNDTRACK ▶' : '🎵 SOUNDTRACK ▼';
+}
+// Start on first keystroke (satisfies browser autoplay policy)
+document.addEventListener('keydown', function startMusic() {
+  loadYT();
+  document.removeEventListener('keydown', startMusic);
+}, { once: true });
+
+// Keep input focused — clicking anywhere refocuses it
+document.addEventListener('click', () => document.getElementById('cmd-input').focus());
+document.getElementById('cmd-input').focus();
+
+const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime'];
+
+const inputEl = document.getElementById('cmd-input');
+inputEl.addEventListener('keydown', function(e) {
+  if(e.key === 'Tab') {
+    e.preventDefault();
+    const val = inputEl.value.toLowerCase().trim();
+    if(!val) return;
+    const match = COMMANDS.find(c => c.startsWith(val));
+    if(match) inputEl.value = match;
+    return;
+  }
+  if(e.key === 'Enter') {
+    const val = inputEl.value;
+    inputEl.value = '';
+    processCommand(val);
+  }
+});
+
+// ============================================================
+//  INTRO SEQUENCE
+// ============================================================
+function intro() {
+  print(`<pre class="ascii-art">
+  ███╗   ███╗ █████╗ ██████╗ ██╗  ██╗███████╗████████╗██████╗ ██╗      █████╗  ██████╗ ███████╗
+  ████╗ ████║██╔══██╗██╔══██╗██║ ██╔╝██╔════╝╚══██╔══╝██╔══██╗██║     ██╔══██╗██╔════╝ ██╔════╝
+  ██╔████╔██║███████║██████╔╝█████╔╝ █████╗     ██║   ██████╔╝██║     ███████║██║      █████╗
+  ██║╚██╔╝██║██╔══██║██╔══██╗██╔═██╗ ██╔══╝     ██║   ██╔═══╝ ██║     ██╔══██║██║      ██╔══╝
+  ██║ ╚═╝ ██║██║  ██║██║  ██║██║  ██╗███████╗   ██║   ██║     ███████╗██║  ██║╚██████╗ ███████╗
+  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+  ██╗  ██╗██╗   ██╗███████╗████████╗██╗     ███████╗
+  ██║  ██║██║   ██║██╔════╝╚══██╔══╝██║     ██╔════╝
+  ███████║██║   ██║███████╗   ██║   ██║     █████╗
+  ██╔══██║██║   ██║╚════██║   ██║   ██║     ██╔══╝
+  ██║  ██║╚██████╔╝███████║   ██║   ███████╗███████╗
+  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚══════╝</pre>`, '');
+  printBlank();
+  print('  ════════════════════════════════════════════════════', 'dim');
+  print('              A FACEBOOK MARKETPLACE FLIPPING SIM', 'title');
+  print('        ft. MATT · GRIFFIN · BUD LIGHT · T-SWAN &amp;', 'title');
+  print('                ✦ THE YING YANG TWINS ✦', 'special');
+  print('  ════════════════════════════════════════════════════', 'dim');
+  printBlank();
+  print('  LOADING PROFILE: MATT // IRIS DRIVE...', 'system');
+  printBlank();
+
+  setTimeout(()=>{
+    print('  👤 Name:        Matt', 'system');
+    print('  🏠 Location:    Iris Drive', 'system');
+    print('  👗 Outfit:      Basketball shorts + Kirkland slides', 'system');
+    print('  🍺 Fuel Source: Bud Light (exclusively)', 'system');
+    print('  🎵 Soundtrack:  Ying Yang Twins (full discography, shuffle off)', 'system');
+    print('  🐕 Dog:         Griffin (will bark at everything. everything.)', 'system');
+    print('  🎯 Mission:     Flip deals on FB Marketplace. Fund the Iris Drive', 'system');
+    print('                  Boat Rally. Survive the summer.', 'system');
+    printBlank();
+    print('  ⚠️  WIN CONDITIONS:', 'event');
+    print('     • Boat Rally Prep: 75%+ (required for YYT visit)', 'event');
+    print('     • Profit tiers determine HOW WELL the visit goes:', 'event');
+    print('       $40,000+ → LEGENDARY: surf, best friends, Bud Light for life,', 'special');
+    print('                  D-Roc babysits Griffin (good luck)', 'special');
+    print('       $25,000+ → GOOD: surf trip, impressed, Bud Lights', 'money');
+    print('       $12,000+ → DECENT: lunch, one beer, they leave', 'event');
+    print('       Under $12k → POOR: they roast the garage and leave', 'error');
+    printBlank();
+    print('  🎵 Now playing: ' + G.currentSong + ' - Ying Yang Twins', 'special');
+    printBlank();
+    print('  ─────────────────────────────────────────────────────', 'dim');
+    print('  It\'s the start of Week 1.', 'dim');
+    print('  Matt is in his driveway. Slides on. Beer in hand.', 'dim');
+    print('  Griffin is barking at a leaf.', 'griffin');
+    print('  Facebook Marketplace is open on his phone.', 'dim');
+    print('  The deals are out there. They\'re not going to flip themselves.', 'dim');
+    print('  ─────────────────────────────────────────────────────', 'dim');
+    printBlank();
+    print('  Type <strong>help</strong> for commands. Type <strong>browse</strong> to start scrolling deals.', 'choice');
+    printBlank();
+    updateStatus();
+  }, 400);
+}
+
+intro();
+</script>
+</body>
+</html>
