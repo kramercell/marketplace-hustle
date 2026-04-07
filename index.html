@@ -332,10 +332,10 @@ const ITEMS = [
   { id:'aircomp',    name:'Air Compressor',          buyMin:40,   buyMax:200,  sellMin:80,   sellMax:350,  emoji:'💨' },
   { id:'freezer',    name:'Chest Freezer',           buyMin:80,   buyMax:250,  sellMin:150,  sellMax:450,  emoji:'❄️' },
   // ── Amish furniture (dangerous — robbery risk) ──
-  { id:'amish_chair',  name:'Amish Oak Chair',        buyMin:80,  buyMax:280,  sellMin:200,  sellMax:500,  emoji:'🪑', amish:true },
-  { id:'amish_table',  name:'Amish Dining Table',     buyMin:200, buyMax:700,  sellMin:500,  sellMax:1200, emoji:'🪵', amish:true },
-  { id:'amish_hutch',  name:'Amish Wardrobe Cabinet', buyMin:300, buyMax:900,  sellMin:700,  sellMax:1600, emoji:'🚪', amish:true },
-  { id:'amish_rocker', name:'Amish Rocking Chair',    buyMin:100, buyMax:400,  sellMin:250,  sellMax:650,  emoji:'🪑', amish:true },
+  { id:'amish_chair',  name:'Amish Oak Chair',        buyMin:80,  buyMax:220,  sellMin:500,  sellMax:900,  emoji:'🪑', amish:true },
+  { id:'amish_table',  name:'Amish Dining Table',     buyMin:150, buyMax:400,  sellMin:900,  sellMax:1800, emoji:'🪵', amish:true },
+  { id:'amish_hutch',  name:'Amish Wardrobe Cabinet', buyMin:200, buyMax:500,  sellMin:1200, sellMax:2500, emoji:'🚪', amish:true },
+  { id:'amish_rocker', name:'Amish Rocking Chair',    buyMin:80,  buyMax:220,  sellMin:450,  sellMax:900,  emoji:'🪑', amish:true },
 ];
 
 const RECALLED_YETI = {
@@ -422,7 +422,6 @@ const G = {
   hogGazinActive: false,
   hogGazinSeen: false,
   lastCrockettAction: -10,
-  amishMessageCooldown: 0,
 };
 
 // ============================================================
@@ -585,7 +584,6 @@ function afterAction() {
   if(G.pendingEvent) {
     if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
     else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
-    else if(G.pendingEvent.type === 'amish') triggerAmishEvent();
     else triggerRallyEvent();
   }
 
@@ -731,19 +729,6 @@ function rollRandomEvent() {
   if(r < 0.18) {
     const q = pick(OTHER_RALLY_QUESTIONS);
     G.pendingEvent = { type:'rally', q:q.q, a:q.a };
-    return;
-  }
-  // Amish message: ~4%, with cooldown
-  if(r < 0.22 && G.actionsTaken > G.amishMessageCooldown) {
-    G.amishMessageCooldown = G.actionsTaken + 6;
-    const amishMessages = [
-      'God\'s peace, friend. The hutch is still available.',
-      'Are you still interested in the chair? Cash only. My father made it.',
-      'The table is spoken of highly in our community. Are you serious buyer?',
-      'We do not use email. Please respond here. The rocking chair is waiting.',
-      'Friend, we have been patient. The wardrobe will not last.',
-    ];
-    G.pendingEvent = { type:'amish', msg: pick(amishMessages) };
     return;
   }
   // bud light run low warning
@@ -2015,21 +2000,22 @@ function amishRobbery(item, listingIdx) {
   ];
   print(`  ${pick(robberyLines)} They took $${money(actualStolen)}.`, 'error');
 
-  if(G.energy > 70) {
+  if(G.energy > 90) {
     G.energy = Math.max(0, G.energy - 20);
-    const recovered = actualStolen * 2;
-    G.money += recovered;
+    G.money += actualStolen;
+    G.inventory.push({ ...item, paidPrice: 0 });
     printBlank();
     print('  Matt has energy. He runs. The buggy pulls away suspiciously fast.', 'special');
     print('  He catches a wheel. A panel pops off: 48-volt battery. Brushless motor.', 'money');
     print('  Matt: "...You have an electric motor in this buggy."', 'special');
-    print('  Elder: "The Lord works in mysterious ways." *hands back double, leaves at 35mph*', 'dim');
+    print('  Elder: "The Lord works in mysterious ways." *hands back the money and the furniture, leaves at 35mph*', 'dim');
     printBlank();
-    print(`  💰 Got back DOUBLE: +$${money(recovered)} | Cash: $${money(G.money)}`, 'money');
+    print(`  💰 Money back: +$${money(actualStolen)} | ${item.emoji} ${item.name} added to inventory`, 'money');
   } else {
-    G.energy = Math.max(0, G.energy - 12);
+    G.energy = Math.min(G.energy, 20);
     print('  The buggy rolled off. No haste. No regrets.', 'dim');
     print(`  💸 Lost: $${money(actualStolen)} | Cash: $${money(G.money)}`, 'error');
+    print('  You don\'t have the energy to make them pay for this.', 'dim');
   }
 
   printBlank();
@@ -2075,56 +2061,19 @@ function cmdCatchHogGazin() {
 // ============================================================
 //  AMISH MESSAGE EVENT
 // ============================================================
-function triggerAmishEvent() {
-  const e = G.pendingEvent;
-  printBlank();
-  print(`🐴  Amish seller: "${e.msg}"`, 'event');
-  print('   <strong>respond</strong> (+prep) or <strong>ignore-amish</strong> (+energy)', 'choice');
-}
-
-function cmdAmishRespond() {
-  if (!G.pendingEvent || G.pendingEvent.type !== 'amish') {
-    print('No Amish message to respond to.', 'dim'); return;
-  }
-  const prepGain = rnd(4, 8);
-  const energyLoss = 6;
-  G.rallyPrep = Math.min(100, G.rallyPrep + prepGain);
-  G.energy = Math.max(0, G.energy - energyLoss);
-  G.pendingEvent = null;
-  printBlank();
-  print('  Matt types back. Reply: "God\'s peace. Come Thursday." He will not go Thursday.', 'dim');
-  print(`  🎉 Rally Prep +${prepGain}% | ⚡ -${energyLoss}`, 'rally');
-  afterAction();
-}
-
-function cmdAmishIgnore() {
-  if (!G.pendingEvent || G.pendingEvent.type !== 'amish') {
-    print('No Amish message to ignore.', 'dim'); return;
-  }
-  const prepLoss = rnd(2, 4);
-  const energyGain = 5;
-  G.rallyPrep = Math.max(0, G.rallyPrep - prepLoss);
-  G.energy = Math.min(100, G.energy + energyGain);
-  G.pendingEvent = null;
-  printBlank();
-  print('  Matt leaves it on read. The elder knows.', 'dim');
-  print(`  🎉 Rally Prep -${prepLoss}% | ⚡ +${energyGain}`, 'event');
-  afterAction();
-}
-
 // ============================================================
 //  BUTTON PANEL
 // ============================================================
 let btnCtx = { mode: 'default', selectedListing: null };
 
-function addBtn(panel, label, cmd, cls, clickFn) {
+function addBtn(panel, label, cmd, cls, clickFn, displayCmd) {
   const b = document.createElement('button');
   b.className = 'game-btn' + (cls ? ' ' + cls : '');
   b.innerHTML = label;
   b.addEventListener('click', function(e) {
     e.stopPropagation();
     if (clickFn) { clickFn(); return; }
-    if (cmd) processCommand(cmd);
+    if (cmd) processCommand(cmd, displayCmd);
   });
   panel.appendChild(b);
 }
@@ -2156,9 +2105,6 @@ function renderButtons() {
       });
     } else if (e.type === 'rally') {
       addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
-    } else if (e.type === 'amish') {
-      addBtn(panel, '🐴 RESPOND (+prep)', 'respond', 'btn-amish');
-      addBtn(panel, '🙈 IGNORE (-prep, +energy)', 'ignore-amish', 'btn-back');
     }
     return;
   }
@@ -2171,20 +2117,20 @@ function renderButtons() {
       const minLowball = Math.round(item.askPrice * 0.40);
       if (item.amish) {
         if (G.money >= item.askPrice)
-          addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy');
+          addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy', null, `buy ${item.name}`);
         const minNegotiate = Math.round(item.askPrice * 0.78);
         if (G.money >= minNegotiate)
-          addBtn(panel, `🤝 NEGOTIATE (~$${money(minNegotiate)}+)`, `negotiate ${n}`, 'btn-negotiate');
+          addBtn(panel, `🤝 NEGOTIATE (~$${money(minNegotiate)}+)`, `negotiate ${n}`, 'btn-negotiate', null, `negotiate ${item.name}`);
         if (G.money >= minLowball)
-          addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball');
+          addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball', null, `lowball ${item.name}`);
       } else if (G.money >= minLowball) {
         // Only show higher-tier options if actually affordable
         if (G.money >= item.askPrice)
-          addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy');
+          addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy', null, `buy ${item.name}`);
         const minNegotiate = Math.round(item.askPrice * 0.78);
         if (G.money >= minNegotiate)
-          addBtn(panel, `🤝 NEGOTIATE (~$${money(minNegotiate)}+)`, `negotiate ${n}`, 'btn-negotiate');
-        addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball');
+          addBtn(panel, `🤝 NEGOTIATE (~$${money(minNegotiate)}+)`, `negotiate ${n}`, 'btn-negotiate', null, `negotiate ${item.name}`);
+        addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball', null, `lowball ${item.name}`);
       }
       // If can't afford to lowball, no action buttons — just back
       addBtn(panel, '← BACK', null, 'btn-back', () => {
@@ -2247,14 +2193,14 @@ function renderButtons() {
 // ============================================================
 //  INPUT HANDLER
 // ============================================================
-function processCommand(raw) {
+function processCommand(raw, displayOverride) {
   const input = raw.trim();
   if(!input) return;
 
   const scrollAnchor = out.scrollHeight;
 
   // Echo command
-  print(`&gt; ${input}`, 'prompt-echo');
+  print(`&gt; ${displayOverride || input}`, 'prompt-echo');
 
   if(G.phase === 'over') {
     print('The summer is over. Refresh to play again.', 'dim');
@@ -2321,13 +2267,7 @@ function processCommand(raw) {
       cmdCalm(); break;
     case 'catch':
       cmdCatchHogGazin(); break;
-    case 'respond':
-      if(G.pendingEvent && G.pendingEvent.type === 'amish') cmdAmishRespond();
-      else cmdAnswer(arg);
-      break;
-    case 'ignore-amish':
-      cmdAmishIgnore(); break;
-    case 'answer': case 'reply': case 'text': case 'ans':
+    case 'answer': case 'reply': case 'respond': case 'text': case 'ans':
       cmdAnswer(arg); break;
     case 'rally': case 'event': case 'boat': case 'boatrally':
       cmdRally(); break;
@@ -2385,7 +2325,7 @@ loadYT();
 document.addEventListener('click', loadYT, { once: true });
 
 
-const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','respond','ignore-amish'];
+const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch'];
 
 const inputEl = document.getElementById('cmd-input');
 inputEl.addEventListener('keydown', function(e) {
