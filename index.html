@@ -81,6 +81,7 @@
   .line.special { color: #ff44ff; }
   .line.beer { color: #ffcc00; }
   .line.choice { color: #00ffff; }
+  .line.mobile-only { display: none; }
 
   #input-area {
     border-top: 1px solid #00ff41;
@@ -237,6 +238,8 @@
   .game-btn.btn-lowball   { border-color: #ff6600; color: #ff6600; }
   .game-btn.btn-next      { border-color: #444;    color: #666;    }
   .game-btn.btn-upgrade   { border-color: #ff44ff; color: #ff44ff; animation: blink 0.6s step-end infinite; }
+  .game-btn.btn-hoggazin  { border-color: #ff0055; color: #ff0055; animation: blink 0.22s step-end infinite; font-weight: bold; }
+  .game-btn.btn-amish     { border-color: #88cc55; color: #88cc55; }
   @media (max-width: 768px) {
     /* Status bar: 3-column grid so stats don't stack 4 rows deep */
     #status-bar {
@@ -256,6 +259,9 @@
 
     /* ASCII title art is unreadable at phone width — hide it */
     .ascii-art { display: none; }
+
+    /* Mobile-only output lines */
+    .line.mobile-only { display: block; }
 
     /* Buttons: bigger tap targets, panel capped so it doesn't eat the screen */
     .game-btn { font-size: 15px; padding: 11px 16px; }
@@ -312,6 +318,24 @@ const ITEMS = [
   { id:'mower',      name:'Zero-Turn Mower',         buyMin:500,  buyMax:1800, sellMin:900,  sellMax:3000, emoji:'🌿' },
   { id:'kayak',      name:'Kayak',                   buyMin:100,  buyMax:400,  sellMin:200,  sellMax:700,  emoji:'🚣' },
   { id:'trailer',    name:'Utility Trailer',         buyMin:300,  buyMax:900,  sellMin:600,  sellMax:1600, emoji:'🚚' },
+  // ── more variety ──
+  { id:'dirtbike',   name:'Dirt Bike',               buyMin:500,  buyMax:1500, sellMin:900,  sellMax:2800, emoji:'🏍' },
+  { id:'jetski',     name:'Jet Ski',                 buyMin:2000, buyMax:6000, sellMin:3500, sellMax:10000,emoji:'💦' },
+  { id:'pontoon',    name:'Pontoon Boat',             buyMin:4000, buyMax:12000,sellMin:7000, sellMax:20000,emoji:'🛥️' },
+  { id:'generator',  name:'Generator',               buyMin:200,  buyMax:800,  sellMin:400,  sellMax:1400, emoji:'⚡' },
+  { id:'gokart',     name:'Go-Kart',                 buyMin:200,  buyMax:800,  sellMin:400,  sellMax:1400, emoji:'🏎️' },
+  { id:'treadmill',  name:'Treadmill',               buyMin:100,  buyMax:400,  sellMin:200,  sellMax:700,  emoji:'🏃' },
+  { id:'pingpong',   name:'Ping Pong Table',         buyMin:80,   buyMax:300,  sellMin:150,  sellMax:550,  emoji:'🏓' },
+  { id:'canoe',      name:'Canoe',                   buyMin:150,  buyMax:600,  sellMin:300,  sellMax:1100, emoji:'🛶' },
+  { id:'chainsaw',   name:'Chainsaw',                buyMin:80,   buyMax:350,  sellMin:150,  sellMax:600,  emoji:'🪚' },
+  { id:'powerwash',  name:'Power Washer',            buyMin:80,   buyMax:300,  sellMin:150,  sellMax:500,  emoji:'🚿' },
+  { id:'aircomp',    name:'Air Compressor',          buyMin:40,   buyMax:200,  sellMin:80,   sellMax:350,  emoji:'💨' },
+  { id:'freezer',    name:'Chest Freezer',           buyMin:80,   buyMax:250,  sellMin:150,  sellMax:450,  emoji:'❄️' },
+  // ── Amish furniture (dangerous — robbery risk) ──
+  { id:'amish_chair',  name:'Amish Oak Chair',        buyMin:80,  buyMax:280,  sellMin:200,  sellMax:500,  emoji:'🪑', amish:true },
+  { id:'amish_table',  name:'Amish Dining Table',     buyMin:200, buyMax:700,  sellMin:500,  sellMax:1200, emoji:'🪵', amish:true },
+  { id:'amish_hutch',  name:'Amish Wardrobe Cabinet', buyMin:300, buyMax:900,  sellMin:700,  sellMax:1600, emoji:'🚪', amish:true },
+  { id:'amish_rocker', name:'Amish Rocking Chair',    buyMin:100, buyMax:400,  sellMin:250,  sellMax:650,  emoji:'🪑', amish:true },
 ];
 
 const RECALLED_YETI = {
@@ -395,6 +419,10 @@ const G = {
   currentSong: YYT_SONGS[Math.floor(Math.random()*YYT_SONGS.length)],
   actionsTaken: 0,
   maxActionsPerWeek: 10,
+  gameStarted: false,
+  hogGazinActive: false,
+  lastCrockettAction: -10,
+  amishMessageCooldown: 0,
 };
 
 // ============================================================
@@ -417,16 +445,93 @@ function beerClass(b) {
 }
 
 // ============================================================
-//  OUTPUT
+//  OUTPUT + TYPEWRITER QUEUE
 // ============================================================
 const out = document.getElementById('output');
 
-function print(text='', cls='') {
+let printQueue = [];
+let printingActive = false;
+let skipTyping = false;
+let currentTypingEl = null;
+
+// Click output to skip current animation
+out.addEventListener('click', function() {
+  if (printingActive || printQueue.length > 0) {
+    skipTyping = true;
+    if (currentTypingEl) {
+      currentTypingEl.innerHTML = currentTypingEl._fullHtml || currentTypingEl.innerHTML;
+    }
+    while (printQueue.length > 0) {
+      const {text, cls} = printQueue.shift();
+      const d = document.createElement('div');
+      d.className = 'line' + (cls ? ' '+cls : '');
+      d.innerHTML = text;
+      out.appendChild(d);
+    }
+    out.scrollTop = out.scrollHeight;
+    printingActive = false;
+    skipTyping = false;
+    currentTypingEl = null;
+  }
+});
+
+function flushQueue() {
+  if (printQueue.length === 0) { printingActive = false; currentTypingEl = null; return; }
+  printingActive = true;
+  const {text, cls} = printQueue.shift();
+  typewriteLine(text, cls, flushQueue);
+}
+
+function typewriteLine(html, cls, cb) {
   const d = document.createElement('div');
   d.className = 'line' + (cls ? ' '+cls : '');
-  d.innerHTML = text;
+  d._fullHtml = html;
   out.appendChild(d);
   out.scrollTop = out.scrollHeight;
+  currentTypingEl = d;
+
+  if (skipTyping) { d.innerHTML = html; cb(); return; }
+
+  let i = 0;
+  let current = '';
+  const speed = 5;
+
+  function step() {
+    if (skipTyping || i >= html.length) {
+      d.innerHTML = html;
+      out.scrollTop = out.scrollHeight;
+      cb();
+      return;
+    }
+    // skip HTML tags instantly
+    if (html[i] === '<') {
+      const end = html.indexOf('>', i);
+      if (end !== -1) { current += html.substring(i, end + 1); i = end + 1; d.innerHTML = current; step(); return; }
+    }
+    // skip HTML entities instantly
+    if (html[i] === '&') {
+      const end = html.indexOf(';', i);
+      if (end !== -1 && end - i <= 8) { current += html.substring(i, end + 1); i = end + 1; d.innerHTML = current; setTimeout(step, speed); return; }
+    }
+    current += html[i++];
+    d.innerHTML = current;
+    out.scrollTop = out.scrollHeight;
+    setTimeout(step, speed);
+  }
+  step();
+}
+
+function print(text='', cls='') {
+  if (!G.gameStarted) {
+    const d = document.createElement('div');
+    d.className = 'line' + (cls ? ' '+cls : '');
+    d.innerHTML = text;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+    return;
+  }
+  printQueue.push({text, cls});
+  if (!printingActive) flushQueue();
 }
 
 function printBlank() { print('&nbsp;'); }
@@ -470,7 +575,7 @@ function roundPrice(p) {
 
 function generateListings() {
   G.listings = [];
-  const count = 4;
+  const count = 5;
   const pool = [...ITEMS];
   // shuffle
   for(let i=pool.length-1;i>0;i--){
@@ -484,22 +589,27 @@ function generateListings() {
     addedRecall = true;
   }
 
+  const amishConditions = ['hand crafted, solid oak, no screws','built by my grandfather\'s hands','cash only, no PayPal, no Venmo','priced firm, the wood alone is worth it','made to last generations','no lowballers, God is watching'];
+  const regularConditions = ['runs great','needs some TLC','one careful owner','wife said get rid of it',
+    'motivated seller','priced to move','barely used','stored in garage','has a few scratches',
+    'serious inquiries only','cash only','no lowballers I know what I have',
+    'just needs a little work','selling for a friend','upgrading, gotta go',
+    'ran when parked','like new condition','some rust but solid','never used',
+    'kids grew up, no longer needed','moving, must sell','priced below market'];
+  const amishSellers = ['EliY_Woodworks','JacobM_Furniture','AaronBishop','DavidZook','SamuelL_Craftsman'];
+  const regularSellers = ['DaveM','BobR','SteveW','Mike_T','JohnnyB','TerryK','ChuckD','RandyP',
+    'GaryL','PhilH','KevinS','BradT','LarryM','ScottW','MikeD','CraigsList_Mike',
+    'BigSteve','ToddR','DennisK','RonaldP','PeteC'];
+
   for(let i=0;i<Math.min(count, pool.length);i++) {
     const item = pool[i];
     const askPrice = roundPrice(rnd(item.buyMin, item.buyMax));
-    const conditions = ['runs great','needs some TLC','one careful owner','wife said get rid of it',
-      'motivated seller','priced to move','barely used','stored in garage','has a few scratches',
-      'serious inquiries only','cash only','no lowballers I know what I have',
-      'just needs a little work','selling for a friend','upgrading, gotta go',
-      'ran when parked','like new condition','some rust but solid','never used',
-      'kids grew up, no longer needed','moving, must sell','priced below market'];
+    const isAmish = !!item.amish;
     G.listings.push({
       ...item,
       askPrice,
-      condition: pick(conditions),
-      seller: pick(['DaveM','BobR','SteveW','Mike_T','JohnnyB','TerryK','ChuckD','RandyP',
-        'GaryL','PhilH','KevinS','BradT','LarryM','ScottW','MikeD','CraigsList_Mike',
-        'BigSteve','ToddR','DennisK','RonaldP','PeteC'])
+      condition: pick(isAmish ? amishConditions : regularConditions),
+      seller: pick(isAmish ? amishSellers : regularSellers)
     });
   }
 
@@ -553,6 +663,7 @@ function afterAction() {
   if(G.pendingEvent) {
     if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
     else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
+    else if(G.pendingEvent.type === 'amish') triggerAmishEvent();
     else triggerRallyEvent();
   }
 
@@ -577,9 +688,39 @@ function redFlash() {
 
 function rollRandomEvent() {
   if(G.pendingEvent) return; // already have one
+  if(G.hogGazinActive) return; // hog gazin window in progress
 
-  // Crockett: once per game, starts firing after action 4
-  if(!G.crockettSeen && G.actionsTaken >= 2 && G.actionsTaken <= 7 && G.week >= 2 && G.week <= 4 && Math.random() < 0.055) {
+  // Block random events while user is browsing listings
+  if(typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action')) return;
+
+  // Hog Gazin': random chance each action — one-time 3-second catch window
+  if(!G.hogGazinActive && Math.random() < 0.06) {
+    G.hogGazinActive = true;
+    printBlank();
+    print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    print('👀  HOG GAZIN\' ALERT!!!', 'event');
+    print('👀  Someone just walked by and is STARING at the garage.', 'event');
+    print('👀  Real suspicious-like. Eyes all big. Hog gazin\'.', 'event');
+    print('👀  ⚠️  CATCH THEM — 3 SECONDS BEFORE THEY GET AWAY!', 'event');
+    print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    renderButtons();
+    hogGazinTimeout = setTimeout(() => {
+      if (G.hogGazinActive) {
+        G.hogGazinActive = false;
+        printBlank();
+        print('  👀 They slipped away down Iris Drive.', 'dim');
+        print('  Matt\'s phone buzzes: FBI MOST WANTED ALERT.', 'error');
+        print('  Reward: $10,000. They were right there. In the slides. In reach.', 'error');
+        printBlank();
+        renderButtons();
+      }
+    }, 3000);
+    return;
+  }
+
+  // Crockett: 75% chance of occurring, can fire multiple times (8-action cooldown)
+  if((G.actionsTaken - G.lastCrockettAction) >= 8 && G.week >= 2 && G.week <= 4 && Math.random() < 0.20) {
+    G.lastCrockettAction = G.actionsTaken;
     G.crockettSeen = true;
     const shift = coin() ? 1 : -1;
     const oldWeek = G.week;
@@ -589,7 +730,7 @@ function rollRandomEvent() {
     printBlank();
     print('☮️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
     print('☮️  A muscular man wearing tie-dye walks over from across the street', 'special');
-    print('☮️  Crockett: "Hey man... I got a surprise for you."', 'special');
+    print('☮️  "Hey Matt... I got that good good!"', 'special');
     print('☮️  A cloud of smoke engulfs Iris Drive. Strange but familiar smell. Things become... chill...', 'special');
     print('☮️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
     setTimeout(() => {
@@ -669,6 +810,19 @@ function rollRandomEvent() {
     G.pendingEvent = { type:'rally', q:q.q, a:q.a };
     return;
   }
+  // Amish message: ~4%, with cooldown
+  if(r < 0.22 && G.actionsTaken > G.amishMessageCooldown) {
+    G.amishMessageCooldown = G.actionsTaken + 6;
+    const amishMessages = [
+      'God\'s peace, friend. The hutch is still available.',
+      'Are you still interested in the chair? Cash only. My father made it.',
+      'The table is spoken of highly in our community. Are you serious buyer?',
+      'We do not use email. Please respond here. The rocking chair is waiting.',
+      'Friend, we have been patient. The wardrobe will not last.',
+    ];
+    G.pendingEvent = { type:'amish', msg: pick(amishMessages) };
+    return;
+  }
   // bud light run low warning
   if(G.budLights <= 1 && r < 0.55) {
     print('', '');
@@ -704,26 +858,26 @@ function drunkFlash() {
 
 const TSWAM_ARRIVALS = [
   'T-Swan has materialized in your driveway.',
-  'T-Swan is leaning on your truck. He is not leaning on purpose.',
+  'T-Swan is leaning on your whip.',
   'T-Swan just appeared from the side of the house. Unclear which direction he came from.',
-  'T-Swan is standing on your lawn holding a solo cup that is not from your house.',
+  'T-Swan is standing on your lawn pondering.',
   'T-Swan has been on your front porch for an unknown amount of time.',
 ];
 const TSWAM_LINES = [
-  '"MATT. Bro. MATT. Do you have... hold on. Do you have any... wait."',
+  '"MATT. Do you have... hold on. Do you have any... wait."',
   '"I just wanted to say. You\'re like. You\'re doing great man. At the... the thing."',
   '"Bro your dog is going CRAZY in there. You should check on— actually he\'s fine."',
-  '"Do you have any more of those... the cold ones. In the blue cans."',
-  '"I told everyone about the boat thing. They\'re very excited. Or I think I did."',
+  '"Do you have any more of those... uh what was I going to say?"',
+  '"I told everyone about the boat thing. They\'re very excited."',
   '"Your garage looks different. Did you get new stuff? That\'s a lot of stuff."',
 ];
 const TSWAM_MATT_REPLIES = [
-  'Matt: "T-Swan. Go home."',
-  'Matt: "T-Swan. It\'s 2pm on a Tuesday."',
-  'Matt: "T-Swan I am literally trying to run a business right now."',
-  'Matt: "T-Swan. Buddy. Where do you live. Point to it."',
-  'Matt: "T-Swan I will give you one Bud Light to leave."',
-  'Matt: "T-Swan, Griffin is going to start barking again. You should go."',
+  'Matt: "I\'m busy."',
+  'Matt: "I got work to do."',
+  'Matt: "I am literally trying to run a business right now."',
+  'Matt: "Buddy. Where do you live. Point to it."',
+  'Matt: "I will give you one Bud Light to leave."',
+  'Matt: "Griffin is going to start barking again. You should go."',
 ];
 
 function triggerTSwanEvent() {
@@ -832,7 +986,8 @@ function cmdBrowse() {
     const profit_est = Math.round((item.sellMin + item.sellMax)/2) - item.askPrice;
     const profitStr = profit_est > 0 ? `<span style="color:#004d00">~$${money(profit_est)} profit</span>` : `<span style="color:#663300">risky</span>`;
     const specialTag = item.special ? ' <span style="color:#ff44ff;animation:blink 0.5s step-end infinite">⚠️ RECALLED!!!</span>' : '';
-    print(`  ${item.emoji} <strong style="color:#00ff41">${item.name}  $${money(item.askPrice)}</strong>${specialTag}`, '');
+    const amishTag = item.amish ? ' <span style="color:#88cc55">⚠️ AMISH SELLER</span>' : '';
+    print(`  ${item.emoji} <strong style="color:#00ff41">${item.name}  $${money(item.askPrice)}</strong>${specialTag}${amishTag}`, '');
     print(`       📝 "${item.condition}" | 👤 ${item.seller}  ${profitStr}`, 'dim');
   });
   printBlank();
@@ -852,6 +1007,13 @@ function cmdBuy(idx) {
     return;
   }
   const item = G.listings[i];
+
+  // Amish robbery
+  if(item.amish) {
+    amishRobbery(item, i);
+    return;
+  }
+
   if(G.money < item.askPrice) {
     print(`You can't afford that. You have $${money(G.money)}, asking $${money(item.askPrice)}.`, 'error');
     print('try negotiating...', 'dim');
@@ -912,6 +1074,39 @@ function cmdNegotiate(idx, isLowball) {
     return;
   }
   const item = G.listings[i];
+
+  // Amish robbery — but lowball with energy > 90% gets a better shot
+  if(item.amish) {
+    if(isLowball && G.energy > 90) {
+      // Special case: high-energy lowball has a fighting chance
+      const offerPct = rnd(40, 55) / 100;
+      const offerPrice = roundPrice(Math.round(item.askPrice * offerPct));
+      if(G.money < offerPrice) { print('Not enough cash.','error'); return; }
+      G.energy = Math.max(0, G.energy - 20);
+      printBlank();
+      print('  🐴 Matt, riding high on energy (and Bud Light), strides up with confidence.', 'event');
+      print(`  Matt: "$${money(offerPrice)}. Cash. Right now. I respect the craft."`, 'event');
+      print('  The Amish elder squints into the distance for a very long time.', 'dim');
+      if(Math.random() < 0.30) {
+        G.money -= offerPrice;
+        G.inventory.push({ ...item, paidPrice: offerPrice });
+        G.listings.splice(i, 1);
+        printBlank();
+        print('  Elder: "...The Lord provides."', 'money');
+        print(`  ✅ Deal done! Paid $${money(offerPrice)}.`, 'money');
+        print('  He hands it over. Horse and buggy rolls off peacefully.', 'dim');
+        print('  Matt is BEAMING. The slides barely touched the ground.', 'special');
+      } else {
+        amishRobbery(item, i);
+        return;
+      }
+      afterAction();
+      return;
+    }
+    amishRobbery(item, i);
+    return;
+  }
+
   const energyCost = isLowball ? 20 : 10;
 
   if(G.energy < energyCost) {
@@ -1534,6 +1729,7 @@ function cmdNext() {
   }
 
   updateStatus();
+  renderButtons();
 }
 
 // ============================================================
@@ -1792,6 +1988,20 @@ function cmdScoot() {
     print('  Loads it onto the Razz somehow. Science cannot explain how.', 'dim');
     print(`  🎁 GARBAGE PICKED: ${found.emoji} ${found.name}`, 'money');
     print(`  Free inventory. Est. sell: $${money(found.sellMin)}–$${money(found.sellMax)}`, 'money');
+    // 1-in-5 chance of hidden stash inside
+    if(Math.random() < 0.20) {
+      const stashAmt = 5000;
+      G.money += stashAmt;
+      printBlank();
+      print('  🤑 Wait.', 'special');
+      print('  Matt pokes the thing. Something rattles inside.', 'dim');
+      print('  Taped to the bottom: a ziplock bag. Chunky.', 'dim');
+      print('  HIDDEN STASH. $5,000 IN CASH.', 'special');
+      print('  Matt stands in the middle of the street for 11 seconds not moving.', 'dim');
+      print('  Gets back on the Razz. Slides on. Slides on.', 'dim');
+      print(`  💰 +$${money(stashAmt)} | Cash: $${money(G.money)}`, 'money');
+      updateStatus();
+    }
   } else if(scootRoll < 0.28) {
     const gain = rnd(20, 40);
     G.energy = Math.min(100, G.energy + gain);
@@ -1892,6 +2102,120 @@ function cmdDeveloper() {
 }
 
 // ============================================================
+//  AMISH ROBBERY
+// ============================================================
+function amishRobbery(item, listingIdx) {
+  const stolen = roundPrice(rnd(Math.floor(item.askPrice * 0.5), item.askPrice));
+  const actualStolen = Math.min(G.money, stolen);
+  G.money -= actualStolen;
+  G.energy = Math.max(0, G.energy - 12);
+  G.listings.splice(listingIdx, 1);
+  redFlash();
+  printBlank();
+  print('🐴 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
+  print('🐴  ROBBED BY THE AMISH', 'error');
+  print('🐴 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
+  const robberyLines = [
+    'The Amish elder produced a hand-carved wooden club from beneath his coat.',
+    'Three Amish men materialized silently from the tree line.',
+    'The seller grabbed Matt\'s wallet with the grip of someone who churns butter daily.',
+    'Matt barely saw it coming. These men are built different.',
+  ];
+  print(`  ${pick(robberyLines)}`, 'error');
+  print(`  They took $${money(actualStolen)} and loaded the ${item.emoji} ${item.name} back onto the buggy.`, 'error');
+  print('  The horse and buggy rolled off at a dignified trot. No haste. No regrets.', 'dim');
+  print('  Matt stood in his driveway holding nothing.', 'dim');
+  print('  Griffin did not help. Griffin watched.', 'griffin');
+  printBlank();
+  print(`  💸 Lost: $${money(actualStolen)} | Cash remaining: $${money(G.money)}`, 'error');
+  printBlank();
+  updateStatus();
+  afterAction();
+}
+
+// ============================================================
+//  HOG GAZIN'
+// ============================================================
+let hogGazinTimeout = null;
+
+function cmdCatchHogGazin() {
+  if (!G.hogGazinActive) return;
+  if (hogGazinTimeout) { clearTimeout(hogGazinTimeout); hogGazinTimeout = null; }
+  G.hogGazinActive = false;
+  G.money += 10000;
+  printBlank();
+  print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
+  print('🚔  GOT \'EM! HOG GAZER APPREHENDED!', 'win');
+  print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
+  printBlank();
+  print('  Matt sprinted across the lawn in Kirkland slides.', 'dim');
+  print('  The slides gave him traction nobody expected. Including Matt.', 'dim');
+  print('  The hog gazer tried to run. The slides were faster.', 'dim');
+  printBlank();
+  print('  Matt\'s phone rings: FBI field office, Atlanta division.', 'event');
+  print('  "We\'ve been looking for this guy for 6 months."', 'event');
+  print('  "He\'s wanted for stealing hogs. You know. Motorcycles."', 'event');
+  print('  "From people\'s garages. All over the southeast."', 'event');
+  print('  "How did you catch him... are those Kirkland slides?"', 'event');
+  print('  Matt: "Yeah."', 'money');
+  print('  FBI: "..."', 'event');
+  print('  FBI: "Okay. The reward is yours."', 'event');
+  printBlank();
+  print('  💰 $10,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
+  print('  Griffin barked the entire time. For once, he was right.', 'griffin');
+  printBlank();
+  updateStatus();
+  afterAction();
+}
+
+// ============================================================
+//  AMISH MESSAGE EVENT
+// ============================================================
+function triggerAmishEvent() {
+  const e = G.pendingEvent;
+  printBlank();
+  print('🐴 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+  print('🐴  FACEBOOK MARKETPLACE MESSAGE (Amish Seller)', 'event');
+  print(`🐴  "${e.msg}"`, 'event');
+  print('🐴 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+  print('   Select <strong>respond</strong> (+prep, -energy) or <strong>ignore-amish</strong> (-prep, +energy).', 'choice');
+}
+
+function cmdAmishRespond() {
+  if (!G.pendingEvent || G.pendingEvent.type !== 'amish') {
+    print('No Amish message to respond to.', 'dim'); return;
+  }
+  const prepGain = rnd(4, 8);
+  const energyLoss = 6;
+  G.rallyPrep = Math.min(100, G.rallyPrep + prepGain);
+  G.energy = Math.max(0, G.energy - energyLoss);
+  G.pendingEvent = null;
+  printBlank();
+  print('  🐴 Matt types back: "Still interested. Cash ready. Send address."', 'money');
+  print('  Reply comes 4 hours later: "God\'s peace. Come Thursday."', 'dim');
+  print('  Matt will not be going Thursday. But it felt neighborly.', 'dim');
+  print(`  🎉 Rally Prep +${prepGain}% (good community vibes) | ⚡ -${energyLoss}`, 'rally');
+  afterAction();
+}
+
+function cmdAmishIgnore() {
+  if (!G.pendingEvent || G.pendingEvent.type !== 'amish') {
+    print('No Amish message to ignore.', 'dim'); return;
+  }
+  const prepLoss = rnd(2, 4);
+  const energyGain = 5;
+  G.rallyPrep = Math.max(0, G.rallyPrep - prepLoss);
+  G.energy = Math.min(100, G.energy + energyGain);
+  G.pendingEvent = null;
+  printBlank();
+  print('  😶 Matt leaves the message on read.', 'dim');
+  print('  The Amish elder is patient. He will wait.', 'dim');
+  print('  The message shows "seen." The elder knows.', 'error');
+  print(`  🎉 Rally Prep -${prepLoss}% | ⚡ +${energyGain} (saved some energy)`, 'event');
+  afterAction();
+}
+
+// ============================================================
 //  BUTTON PANEL
 // ============================================================
 let btnCtx = { mode: 'default', selectedListing: null };
@@ -1915,6 +2239,11 @@ function renderButtons() {
 
   if (G.phase === 'over') return;
 
+  // Hog gazin' — show flashing catch button at top (non-blocking)
+  if (G.hogGazinActive) {
+    addBtn(panel, '🐷 CATCH THE HOG GAZER!!!', 'catch', 'btn-hoggazin');
+  }
+
   // Pending events take full priority
   if (G.pendingEvent) {
     const e = G.pendingEvent;
@@ -1930,6 +2259,9 @@ function renderButtons() {
       });
     } else if (e.type === 'rally') {
       addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
+    } else if (e.type === 'amish') {
+      addBtn(panel, '🐴 RESPOND (+prep)', 'respond', 'btn-amish');
+      addBtn(panel, '🙈 IGNORE (-prep, +energy)', 'ignore-amish', 'btn-back');
     }
     return;
   }
@@ -1940,7 +2272,13 @@ function renderButtons() {
     if (item) {
       const n = btnCtx.selectedListing + 1;
       const minLowball = Math.round(item.askPrice * 0.40);
-      if (G.money >= minLowball) {
+      if (item.amish) {
+        // Amish items: warn about robbery risk
+        addBtn(panel, `🐴 BUY (ROBBERY RISK) $${money(item.askPrice)}`, `buy ${n}`, 'btn-event');
+        addBtn(panel, `🐴 NEGOTIATE (ROBBERY RISK)`, `negotiate ${n}`, 'btn-event');
+        const energyNote = G.energy > 90 ? ' ⚡HIGH ENERGY BONUS' : ' ⚠️ need energy>90%';
+        addBtn(panel, `📉 LOWBALL${energyNote}`, `lowball ${n}`, G.energy > 90 ? 'btn-lowball' : 'btn-back');
+      } else if (G.money >= minLowball) {
         // Only show higher-tier options if actually affordable
         if (G.money >= item.askPrice)
           addBtn(panel, `💰 BUY  $${money(item.askPrice)}`, `buy ${n}`, 'btn-buy');
@@ -1982,10 +2320,9 @@ function renderButtons() {
     if (G.budLights > 0)        addBtn(panel, '🍺 RECHARGE', 'recharge', 'btn-beer');
                                 addBtn(panel, '🏪 RESTOCK', 'restock', '');
                                 addBtn(panel, '📋 PREP', 'prep', '');
-    if (G.week >= 2)            addBtn(panel, '🛴 SCOOT', 'scoot', '');
+    if (G.week >= 2)            addBtn(panel, '🛵 SCOOT', 'scoot', '');
                                 addBtn(panel, '📊 STATUS', 'status', '');
                                 addBtn(panel, '📦 INVENTORY', 'inventory', '');
-                                addBtn(panel, '🎉 RALLY', 'rally', '');
     const hasYeti = G.inventory.some(i => i.id === 'yeti_recalled' && !i.upgraded);
     if (hasYeti)                addBtn(panel, '🧊 UPGRADE YETI', 'upgrade', 'btn-sell');
                                 addBtn(panel, '← BACK', null, 'btn-back', () => {
@@ -2000,7 +2337,7 @@ function renderButtons() {
   if (G.budLights > 0)        addBtn(panel, '🍺 RECHARGE', 'recharge', 'btn-beer');
   if (G.budLights <= 3)       addBtn(panel, '🏪 RESTOCK', 'restock', '');
                               addBtn(panel, '📋 PREP', 'prep', '');
-  if (G.week >= 2)            addBtn(panel, '🛴 SCOOT', 'scoot', '');
+  if (G.week >= 2)            addBtn(panel, '🛵 SCOOT', 'scoot', '');
   const hasYetiDefault = G.inventory.some(i => i.id === 'yeti_recalled' && !i.upgraded);
   if (hasYetiDefault)         addBtn(panel, '🧊⭐ UPGRADE YETI', 'upgrade', 'btn-upgrade');
                               addBtn(panel, '⋯ MORE', null, 'btn-next', () => {
@@ -2014,6 +2351,9 @@ function renderButtons() {
 function processCommand(raw) {
   const input = raw.trim();
   if(!input) return;
+
+  // Start typewriter mode on first real command
+  if(!G.gameStarted) G.gameStarted = true;
 
   // Echo command
   print(`&gt; ${input}`, 'prompt-echo');
@@ -2081,7 +2421,15 @@ function processCommand(raw) {
       cmdDeveloper(); break;
     case 'calm': case 'quiet': case 'griffin': case 'griff': case 'dog':
       cmdCalm(); break;
-    case 'answer': case 'reply': case 'respond': case 'text': case 'ans':
+    case 'catch':
+      cmdCatchHogGazin(); break;
+    case 'respond':
+      if(G.pendingEvent && G.pendingEvent.type === 'amish') cmdAmishRespond();
+      else cmdAnswer(arg);
+      break;
+    case 'ignore-amish':
+      cmdAmishIgnore(); break;
+    case 'answer': case 'reply': case 'text': case 'ans':
       cmdAnswer(arg); break;
     case 'rally': case 'event': case 'boat': case 'boatrally':
       cmdRally(); break;
@@ -2138,7 +2486,7 @@ loadYT();
 document.addEventListener('click', loadYT, { once: true });
 
 
-const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer'];
+const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','respond','ignore-amish'];
 
 const inputEl = document.getElementById('cmd-input');
 inputEl.addEventListener('keydown', function(e) {
@@ -2176,6 +2524,7 @@ function intro() {
   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚══════╝</pre>`, '');
   printBlank();
   print('  ════════════════════════════════════════════════════', 'dim');
+  print('                  MARKETPLACE HUSTLE', 'title mobile-only');
   print('              A FACEBOOK MARKETPLACE FLIPPING SIM', 'title');
   print('               ft. MATT · GRIFFIN &amp;', 'title');
   print('                ✦ THE YING YANG TWINS ✦', 'special');
@@ -2191,8 +2540,11 @@ function intro() {
     print('  🍺 Fuel Source: Bud Light (exclusively)', 'system');
     print('  🎵 Soundtrack:  Ying Yang Twins (full discography, shuffle off)', 'system');
     print('  🐕 Dog:         Griffin (will bark at everything. everything.)', 'system');
-    print('  🎯 Mission:     Flip deals on FB Marketplace. Fund the Iris Drive', 'system');
-    print('                  Boat Rally. Survive the summer.', 'system');
+    print('  🎯 Mission:', 'system');
+    print('                   Flip deals on FB Marketplace. ', 'system');
+    print('                  Prepare to host the Lake Boat Rally', 'system');
+    print('                  in 5 short weeks.', 'system');
+    print('                  Impress the Ying Yang Twins.', 'system');
     printBlank();
     print('  ⚠️  WIN CONDITIONS:', 'event');
     print('     • Boat Rally Prep: 75%+ (required for Ying Yang Twins visit)', 'event');
