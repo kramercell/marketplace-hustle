@@ -730,8 +730,8 @@ function rollRandomEvent() {
     printBlank();
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
     print('🚛  CRAZY BILLY ALERT!!!', 'event');
-    print('🚛  A rattling truck just pulled into the driveway.', 'event');
-    print('🚛  It\'s Crazy Billy. He has a weedwhacker. He is not stopping.', 'event');
+    print('🚛  A rattling truck just pulled into the driveway at 2am.', 'event');
+    print('🚛  It\'s Crazy Billy. He\'s started landscaping your yard!.', 'event');
     print('🚛  ⚠️  STOP HIM — 1 SECOND BEFORE IT\'S TOO LATE!', 'event');
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
     renderButtons();
@@ -842,7 +842,33 @@ function rollRandomEvent() {
     G.pendingEvent = { type:'fireworks', opts: pool.slice(0,3) };
     return;
   }
-  // other boat rally questions: ~5%
+  // "Is this still available?" ghost — ~2%, only if inventory has items
+  if(r < 0.15 && G.inventory.length > 0) {
+    const item = pick(G.inventory);
+    const ghostMessages = [
+      'Is this still available?',
+      'Still have this?',
+      'Is this available',
+      'Hi is this still for sale?',
+      'still available?',
+    ];
+    const msg = pick(ghostMessages);
+    printBlank();
+    print(`  📱 Facebook Marketplace: New message`, 'rally');
+    print(`  "${msg}"`, 'rally');
+    print(`  — about your ${item.emoji} ${item.name}`, 'dim');
+    setTimeout(() => {
+      print('  Matt: "Yes! Still available."', 'money');
+      setTimeout(() => {
+        print('  ...', 'dim');
+        print('  They have not responded.', 'dim');
+        print('  They will not respond.', 'dim');
+        out.scrollTop = out.scrollHeight;
+      }, 1200);
+    }, 900);
+    return;
+  }
+  // other boat rally questions: ~3%
   if(r < 0.18) {
     const q = pick(OTHER_RALLY_QUESTIONS);
     G.pendingEvent = { type:'rally', q:q.q, a:q.a };
