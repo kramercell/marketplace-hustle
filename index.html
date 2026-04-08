@@ -2553,13 +2553,18 @@ function toggleYT() {
     collapsed ? '🎵 SOUNDTRACK ▶' : '🎵 SOUNDTRACK ▼';
 }
 let fontStep = 0; // -1, 0, or +1
-const BASE_FONT = 20; // matches body font-size in CSS (px)
+const BASE_FONT_DESKTOP = 20;
+const BASE_FONT_MOBILE  = 16;
 const FONT_DELTA = 3;
 function adjustFont(dir) {
   const next = fontStep + dir;
   if (next < -1 || next > 1) return;
   fontStep = next;
-  document.body.style.fontSize = (BASE_FONT + fontStep * FONT_DELTA) + 'px';
+  const isMobile = window.innerWidth <= 768;
+  const base = isMobile ? BASE_FONT_MOBILE : BASE_FONT_DESKTOP;
+  const size = base + fontStep * FONT_DELTA;
+  document.getElementById('output').style.fontSize = size + 'px';
+  document.body.style.fontSize = size + 'px';
   document.getElementById('font-out').disabled = fontStep <= -1;
   document.getElementById('font-in').disabled  = fontStep >= 1;
 }
