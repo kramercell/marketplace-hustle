@@ -2552,13 +2552,13 @@ function toggleYT() {
   document.getElementById('yt-label').textContent =
     collapsed ? '🎵 SOUNDTRACK ▶' : '🎵 SOUNDTRACK ▼';
 }
-let fontStep = 0; // -1, 0, or +1
+let fontStep = 0; // -1, 0, +1, or +2
 const BASE_FONT_DESKTOP = 20;
 const BASE_FONT_MOBILE  = 16;
 const FONT_DELTA = 3;
 function adjustFont(dir) {
   const next = fontStep + dir;
-  if (next < -1 || next > 1) return;
+  if (next < -1 || next > 2) return;
   fontStep = next;
   const isMobile = window.innerWidth <= 768;
   const base = isMobile ? BASE_FONT_MOBILE : BASE_FONT_DESKTOP;
@@ -2566,7 +2566,7 @@ function adjustFont(dir) {
   document.getElementById('output').style.fontSize = size + 'px';
   document.body.style.fontSize = size + 'px';
   document.getElementById('font-out').disabled = fontStep <= -1;
-  document.getElementById('font-in').disabled  = fontStep >= 1;
+  document.getElementById('font-in').disabled  = fontStep >= 2;
 }
 
 // Try autoplay immediately; fall back to first button click
