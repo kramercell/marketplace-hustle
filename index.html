@@ -2245,7 +2245,7 @@ function cmdCatchHogGazin() {
   if (!G.hogGazinActive) return;
   if (hogGazinTimeout) { clearTimeout(hogGazinTimeout); hogGazinTimeout = null; }
   G.hogGazinActive = false;
-  G.money += 3000;
+  G.money += 2000;
   printBlank();
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
   print('🚔  GOT \'EM! HOG GAZER APPREHENDED!', 'win');
@@ -2269,7 +2269,7 @@ function cmdCatchHogGazin() {
       out.scrollTop = out.scrollHeight;
       setTimeout(() => {
         printBlank();
-        print('  💰 $3,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
+        print('  💰 $2,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
         print('  Griffin barked the entire time. For once, he was right.', 'griffin');
         printBlank();
         out.scrollTop = out.scrollHeight;
