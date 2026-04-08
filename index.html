@@ -215,8 +215,26 @@
     cursor: pointer;
     white-space: nowrap;
     user-select: none;
+    flex: 1;
   }
   #yt-label:hover { background: #001a00; }
+  #yt-header {
+    display: flex;
+    align-items: center;
+  }
+  .font-btn {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #006600;
+    background: transparent;
+    border: none;
+    padding: 3px 7px;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1;
+  }
+  .font-btn:hover { color: #00ff41; }
+  .font-btn:disabled { color: #003300; cursor: default; }
   #yt-frame { display: block; }
   #yt-dock.collapsed #yt-frame { height: 0; }
   #yt-dock.collapsed { border-bottom: none; }
@@ -323,7 +341,11 @@
 </div>
 
 <div id="yt-dock" class="collapsed">
-  <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK ▶</div>
+  <div id="yt-header">
+    <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK ▶</div>
+    <button class="font-btn" id="font-out" onclick="adjustFont(-1)" title="Smaller text">🔍−</button>
+    <button class="font-btn" id="font-in"  onclick="adjustFont(1)"  title="Larger text">🔍+</button>
+  </div>
   <iframe id="yt-frame" width="220" height="124" frameborder="0"
     allow="autoplay; encrypted-media; fullscreen"
     allowfullscreen></iframe>
@@ -2530,6 +2552,18 @@ function toggleYT() {
   document.getElementById('yt-label').textContent =
     collapsed ? '🎵 SOUNDTRACK ▶' : '🎵 SOUNDTRACK ▼';
 }
+let fontStep = 0; // -1, 0, or +1
+const BASE_FONT = 20; // matches body font-size in CSS (px)
+const FONT_DELTA = 3;
+function adjustFont(dir) {
+  const next = fontStep + dir;
+  if (next < -1 || next > 1) return;
+  fontStep = next;
+  document.body.style.fontSize = (BASE_FONT + fontStep * FONT_DELTA) + 'px';
+  document.getElementById('font-out').disabled = fontStep <= -1;
+  document.getElementById('font-in').disabled  = fontStep >= 1;
+}
+
 // Try autoplay immediately; fall back to first button click
 loadYT();
 document.addEventListener('click', loadYT, { once: true });
