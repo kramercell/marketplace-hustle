@@ -137,6 +137,20 @@
   }
   body.drunk-mode { animation: drunkNeighbor 3.5s ease-out forwards; }
 
+  @keyframes buzzSway {
+    0%   { transform: rotate(0deg) skewX(0deg); filter: none; }
+    8%   { transform: rotate(-1.5deg) skewX(1deg); filter: hue-rotate(80deg) saturate(2.5); }
+    20%  { transform: rotate(1deg) skewX(-2deg); filter: hue-rotate(200deg) saturate(3) brightness(1.2); }
+    35%  { transform: rotate(-0.8deg) skewX(1.5deg); filter: hue-rotate(320deg) saturate(2); }
+    50%  { transform: rotate(1.2deg) skewX(-1deg); filter: hue-rotate(140deg) saturate(2.5) brightness(0.9); }
+    65%  { transform: rotate(-0.5deg) skewX(0.8deg); filter: hue-rotate(60deg) saturate(1.8); }
+    80%  { transform: rotate(0.4deg) skewX(-0.5deg); filter: hue-rotate(20deg) saturate(1.3); }
+    100% { transform: rotate(0deg) skewX(0deg); filter: none; }
+  }
+  body.buzz-mode #output { animation: buzzSway 10s ease-out forwards; }
+  body.buzz-mode #output .line { letter-spacing: 0.03em; }
+  body.buzz-mode #status-bar { filter: hue-rotate(120deg) saturate(2); transition: filter 5s ease-out; }
+
   @keyframes flashDanger {
     0%,100% { opacity: 1; }
     50% { opacity: 0.1; }
@@ -454,7 +468,7 @@ const out = document.getElementById('output');
 function print(text='', cls='') {
   const d = document.createElement('div');
   d.className = 'line' + (cls ? ' '+cls : '');
-  d.innerHTML = text;
+  d.innerHTML = (buzzActive && text && !text.startsWith('╔') && !text.startsWith('║') && !text.startsWith('╚')) ? buzzify(text) : text;
   out.appendChild(d);
 }
 
@@ -787,6 +801,49 @@ function drunkFlash() {
   void document.body.offsetWidth; // force reflow to restart animation
   document.body.classList.add('drunk-mode');
   setTimeout(() => document.body.classList.remove('drunk-mode'), 3500);
+}
+
+let buzzActive = false;
+let recentRecharges = [];
+let buzzTimeout = null;
+
+function buzzify(text) {
+  // Only mangle text outside HTML tags
+  return text.replace(/(?:^|(?<=>))[^<]+/g, seg => {
+    if (!seg.trim()) return seg;
+    return seg.split('').map((c, i, arr) => {
+      if (Math.random() < 0.12) {
+        const swaps = { e:'ee', a:'aa', i:'ii', o:'oo', s:'ss', r:'rr', t:'tt', n:'nn', l:'ll' };
+        const typos = { e:'a', a:'e', i:'ie', o:'0', s:'z', r:'er', th:'ht', to:'tto' };
+        const lo = c.toLowerCase();
+        if (swaps[lo] && Math.random() < 0.5) return c === c.toUpperCase() ? swaps[lo].toUpperCase() : swaps[lo];
+        if (typos[lo] && Math.random() < 0.4) return typos[lo];
+      }
+      // occasional space insertion
+      if (c === ' ' && Math.random() < 0.08) return '  ';
+      return c;
+    }).join('');
+  });
+}
+
+function triggerBuzz() {
+  buzzActive = true;
+  document.body.classList.remove('buzz-mode');
+  void document.body.offsetWidth;
+  document.body.classList.add('buzz-mode');
+  if (buzzTimeout) clearTimeout(buzzTimeout);
+  buzzTimeout = setTimeout(() => {
+    buzzActive = false;
+    document.body.classList.remove('buzz-mode');
+    printBlank();
+    const msg = 'You recharged too fast! Pace yourself...';
+    const d = document.createElement('div');
+    d.className = 'line event';
+    d.innerHTML = '  ' + msg;
+    out.appendChild(d);
+    printBlank();
+    out.scrollTop = out.scrollHeight;
+  }, 10000);
 }
 
 const TSWAM_ARRIVALS = [
@@ -1304,6 +1361,15 @@ function cmdDrink() {
   }
   if(G.budLights <= 2) print('  ⚠️  Running low. Select <strong>restock</strong>.', 'event');
   updateStatus();
+
+  // Rapid recharge detection
+  const now = Date.now();
+  recentRecharges = recentRecharges.filter(t => now - t < 2000);
+  recentRecharges.push(now);
+  if (recentRecharges.length >= 3 && !buzzActive) {
+    recentRecharges = [];
+    triggerBuzz();
+  }
 }
 
 function cmdRestock() {
