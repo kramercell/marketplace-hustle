@@ -496,8 +496,10 @@ function roundPrice(p) {
 
 function generateListings() {
   G.listings = [];
-  const count = 5;
-  const pool = [...ITEMS];
+  const count = 4;
+  // Only include Amish items ~30% of the time so they're a surprise, not constant
+  const includeAmish = Math.random() < 0.30;
+  const pool = ITEMS.filter(item => !item.amish || includeAmish);
   // shuffle
   for(let i=pool.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -646,6 +648,7 @@ function rollRandomEvent() {
     const shift = coin() ? 1 : -1;
     const oldWeek = G.week;
     G.week = Math.max(1, Math.min(G.totalWeeks, G.week + shift));
+    G.actionsTaken = 0; // reset so auto-advance doesn't also fire this same tick
     G.weeklyPrepGained = 0;
     drunkFlash();
     printBlank();
@@ -900,6 +903,8 @@ function cmdBrowse() {
   printBlank();
   print(`  Select a listing to buy, negotiate, or lowball.`, 'choice');
   G.energy = Math.max(0, G.energy - 3);
+  // Set listings mode BEFORE afterAction so the browse lockout in rollRandomEvent is active
+  btnCtx = { mode: 'listings', selectedListing: null };
   afterAction();
 }
 
@@ -1553,6 +1558,12 @@ function cmdNext() {
   G.listings = [];
   G.currentSong = pick(YYT_SONGS);
 
+  // Check end condition FIRST — before printing anything — so we never show "Week 6 of 5"
+  if(G.week > G.totalWeeks) {
+    endGame();
+    return;
+  }
+
   // Between weeks: full rest, fridge raid
   G.energy = Math.min(100, G.energy + rnd(40, 65));
   if(coin(0.35)) G.budLights = Math.max(0, G.budLights - 1);
@@ -1588,12 +1599,6 @@ function cmdNext() {
     print('  Week 4. One week left. The rally is no longer hypothetical.', 'dim');
     print('  T-Swan has started waving when Matt pulls out of the driveway.', 'dim');
     print('  This is a new development. No one knows what it means.', 'dim');
-  }
-
-  // Check end condition
-  if(G.week > G.totalWeeks) {
-    endGame();
-    return;
   }
 
   // Milestone messages
