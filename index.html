@@ -642,12 +642,19 @@ function rollRandomEvent() {
     hogGazinTimeout = setTimeout(() => {
       if (G.hogGazinActive) {
         G.hogGazinActive = false;
+        const stolen = Math.floor(G.money / 2);
+        G.money -= stolen;
         printBlank();
         print('  👀 They slipped away down Iris Drive.', 'dim');
-        print('  Matt\'s phone buzzes: FBI MOST WANTED ALERT.', 'error');
-        print('  Reward: $10,000. They were right there. In the slides. In reach.', 'error');
-        printBlank();
-        renderButtons();
+        print('  Matt hears his garage door bang. His hog is gone.', 'error');
+        setTimeout(() => {
+          print('  The hog gazer got what he came for.', 'error');
+          print(`  💸 Lost $${money(stolen)} — half of Matt\'s cash.`, 'error');
+          printBlank();
+          updateStatus();
+          renderButtons();
+          out.scrollTop = out.scrollHeight;
+        }, 1200);
       }
     }, 3000);
     return;
@@ -764,8 +771,11 @@ function triggerGriffinEvent() {
   print(`🐕  at ${e.target}.`, 'griffin');
   print(`🐕  The whole neighborhood can hear this.`, 'griffin');
   print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
-  print('   Select <strong>calm</strong> to attempt to calm Griffin down.', 'choice');
-  print('   (Results may vary. They will vary. Downward.)', 'dim');
+  setTimeout(() => {
+    print('   Select <strong>calm</strong> to attempt to calm Griffin down.', 'choice');
+    print('   (Results may vary. They will vary. Downward.)', 'dim');
+    out.scrollTop = out.scrollHeight;
+  }, 1200);
 }
 
 // ============================================================
@@ -810,7 +820,10 @@ function triggerTSwanEvent() {
   print(`🚨  ${pick(TSWAM_ARRIVALS)}`, 'error');
   print(`🚨  T-Swan: "Hey young man..." ${pick(TSWAM_LINES)}`, 'error');
   print('🚨 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
-  print('   Select <strong>deal</strong> to handle T-Swan.', 'choice');
+  setTimeout(() => {
+    print('   Select <strong>deal</strong> to handle T-Swan.', 'choice');
+    out.scrollTop = out.scrollHeight;
+  }, 1200);
 }
 
 function triggerRallyEvent() {
@@ -846,8 +859,11 @@ function triggerKramerEvent() {
   print('⛵  He\'s waving a Bud Light at passing boats. None have stopped.', 'event');
   print('⛵  He just called Matt.', 'event');
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
-  print('   <strong>help-kramer</strong> (-40 energy, get his 2-stroke motor)', 'choice');
-  print('   <strong>ignore-kramer</strong> (+40 energy, Kramer sinks)', 'choice');
+  setTimeout(() => {
+    print('   <strong>help-kramer</strong> (-40 energy, get his 2-stroke motor)', 'choice');
+    print('   <strong>ignore-kramer</strong> (+40 energy, Kramer sinks)', 'choice');
+    out.scrollTop = out.scrollHeight;
+  }, 1200);
 }
 
 function cmdHelpKramer() {
@@ -871,11 +887,14 @@ function cmdHelpKramer() {
   printBlank();
   print('  Matt heads out and tows Kramer back to the dock.', 'dim');
   print('  It takes a while. Kramer talks the entire time.', 'dim');
-  print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
-  print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
-  print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
-  updateStatus();
-  afterAction();
+  setTimeout(() => {
+    print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
+    print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
+    print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
+    out.scrollTop = out.scrollHeight;
+    afterAction();
+    renderButtons();
+  }, 1200);
 }
 
 function cmdIgnoreKramer() {
@@ -885,13 +904,16 @@ function cmdIgnoreKramer() {
   printBlank();
   print('  Matt puts his phone face-down on the hood of the truck.', 'dim');
   print('  Gets back to the listings.', 'dim');
-  printBlank();
-  print('  Kramer sinks with the boat.', 'error');
-  print('  He is fine. He swam. But the boat is gone.', 'dim');
-  print('  He will bring this up for years.', 'dim');
-  print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
-  updateStatus();
-  afterAction();
+  setTimeout(() => {
+    printBlank();
+    print('  Kramer sinks with the boat.', 'error');
+    print('  He is fine. He swam. But the boat is gone.', 'dim');
+    print('  He will bring this up for years.', 'dim');
+    print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
+    out.scrollTop = out.scrollHeight;
+    afterAction();
+    renderButtons();
+  }, 1200);
 }
 
 // ============================================================
@@ -2087,20 +2109,23 @@ function amishRobbery(item, listingIdx) {
     printBlank();
     print('  Matt has energy. He runs. The buggy pulls away suspiciously fast.', 'special');
     print('  He catches a wheel. A panel pops off: 48-volt battery. Brushless motor.', 'money');
-    print('  Matt: "...You have an electric motor in this buggy."', 'special');
-    print('  Elder: "The Lord works in mysterious ways." *hands back the money and the furniture, leaves at 35mph*', 'dim');
-    printBlank();
-    print(`  💰 Money back: +$${money(actualStolen)} | ${item.emoji} ${item.name} added to inventory`, 'money');
+    setTimeout(() => {
+      print('  Matt: "...You have an electric motor in this buggy."', 'special');
+      print('  Elder: "The Lord works in mysterious ways." *hands back the money and the furniture, leaves at 35mph*', 'dim');
+      printBlank();
+      print(`  💰 Money back: +$${money(actualStolen)} | ${item.emoji} ${item.name} added to inventory`, 'money');
+      out.scrollTop = out.scrollHeight;
+      afterAction();
+      renderButtons();
+    }, 1200);
   } else {
     G.energy = Math.min(G.energy, 20);
     print('  The buggy rolled off. No haste. No regrets.', 'dim');
     print(`  💸 Lost: $${money(actualStolen)} | Cash: $${money(G.money)}`, 'error');
     print('  You don\'t have the energy to make them pay for this.', 'dim');
+    printBlank();
+    afterAction();
   }
-
-  printBlank();
-  updateStatus();
-  afterAction();
 }
 
 // ============================================================
@@ -2117,25 +2142,34 @@ function cmdCatchHogGazin() {
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
   print('🚔  GOT \'EM! HOG GAZER APPREHENDED!', 'win');
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
-  printBlank();
-  print('  Matt sprinted across the lawn in Kirkland slides.', 'dim');
-  print('  The slides gave him traction nobody expected. Including Matt.', 'dim');
-  print('  The hog gazer tried to run. The slides were faster.', 'dim');
-  printBlank();
-  print('  Matt\'s phone rings: FBI field office, Atlanta division.', 'event');
-  print('  "We\'ve been looking for this guy for 6 months."', 'event');
-  print('  "He\'s wanted for stealing hogs. You know. Motorcycles."', 'event');
-  print('  "From people\'s garages. All over the southeast."', 'event');
-  print('  "How did you catch him... are those Kirkland slides?"', 'event');
-  print('  Matt: "Yeah."', 'money');
-  print('  FBI: "..."', 'event');
-  print('  FBI: "Okay. The reward is yours."', 'event');
-  printBlank();
-  print('  💰 $3,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
-  print('  Griffin barked the entire time. For once, he was right.', 'griffin');
-  printBlank();
-  updateStatus();
-  afterAction();
+  setTimeout(() => {
+    printBlank();
+    print('  Matt sprinted across the lawn in Kirkland slides.', 'dim');
+    print('  The slides gave him traction nobody expected. Including Matt.', 'dim');
+    print('  The hog gazer tried to run. The slides were faster.', 'dim');
+    out.scrollTop = out.scrollHeight;
+    setTimeout(() => {
+      printBlank();
+      print('  Matt\'s phone rings: FBI field office, Atlanta division.', 'event');
+      print('  "We\'ve been looking for this guy for 6 months."', 'event');
+      print('  "He\'s wanted for stealing hogs. You know. Motorcycles."', 'event');
+      print('  "From people\'s garages. All over the southeast."', 'event');
+      print('  "How did you catch him... are those Kirkland slides?"', 'event');
+      print('  Matt: "Yeah."', 'money');
+      print('  FBI: "..."', 'event');
+      print('  FBI: "Okay. The reward is yours."', 'event');
+      out.scrollTop = out.scrollHeight;
+      setTimeout(() => {
+        printBlank();
+        print('  💰 $3,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
+        print('  Griffin barked the entire time. For once, he was right.', 'griffin');
+        printBlank();
+        out.scrollTop = out.scrollHeight;
+        afterAction();
+        renderButtons();
+      }, 1400);
+    }, 1400);
+  }, 1200);
 }
 
 // ============================================================
