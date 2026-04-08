@@ -414,10 +414,13 @@ const G = {
   trueLimeUsed: false,
   crockettSeen: false,
   tigerWoodsSeen: false,
+  kramerSeen: false,
+  kramerTriggerAction: Math.random() < 0.75 ? Math.floor(Math.random() * 30) + 5 : -1,
   weeklyPrepGained: 0,
   phase: 'playing', // 'playing','won','lost'
   currentSong: YYT_SONGS[Math.floor(Math.random()*YYT_SONGS.length)],
   actionsTaken: 0,
+  totalActionsTaken: 0,
   maxActionsPerWeek: 10,
   hogGazinActive: false,
   hogGazinSeen: false,
@@ -497,8 +500,8 @@ function roundPrice(p) {
 function generateListings() {
   G.listings = [];
   const count = 4;
-  // Only include Amish items ~30% of the time so they're a surprise, not constant
-  const includeAmish = Math.random() < 0.30;
+  // Include Amish items ~50% of the time
+  const includeAmish = Math.random() < 0.50;
   const pool = ITEMS.filter(item => !item.amish || includeAmish);
   // shuffle
   for(let i=pool.length-1;i>0;i--){
@@ -552,6 +555,7 @@ function generateListings() {
 // ============================================================
 function afterAction() {
   G.actionsTaken++;
+  G.totalActionsTaken++;
   updateStatus();
 
   // Energy = 0 → sober game over
@@ -586,6 +590,7 @@ function afterAction() {
   if(G.pendingEvent) {
     if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
     else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
+    else if(G.pendingEvent.type === 'kramer') triggerKramerEvent();
     else triggerRallyEvent();
   }
 
@@ -611,6 +616,13 @@ function redFlash() {
 function rollRandomEvent() {
   if(G.pendingEvent) return; // already have one
   if(G.hogGazinActive) return; // hog gazin window in progress
+
+  // Kramer: once per game — check before browse lockout so it can't be starved
+  if(!G.kramerSeen && G.kramerTriggerAction > 0 && G.totalActionsTaken >= G.kramerTriggerAction) {
+    G.kramerSeen = true;
+    G.pendingEvent = { type:'kramer' };
+    return;
+  }
 
   // Block random events while user is browsing listings
   if(typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action')) return;
@@ -641,9 +653,8 @@ function rollRandomEvent() {
     return;
   }
 
-  // Crockett: 75% chance of occurring, can fire multiple times (8-action cooldown)
-  if((G.actionsTaken - G.lastCrockettAction) >= 8 && G.week >= 2 && G.week <= 4 && Math.random() < 0.20) {
-    G.lastCrockettAction = G.actionsTaken;
+  // Crockett: once per game
+  if(!G.crockettSeen && G.week >= 2 && G.week <= 4 && Math.random() < 0.20) {
     G.crockettSeen = true;
     const shift = coin() ? 1 : -1;
     const oldWeek = G.week;
@@ -825,6 +836,65 @@ function triggerRallyEvent() {
 }
 
 // ============================================================
+//  KRAMER EVENT
+// ============================================================
+function triggerKramerEvent() {
+  printBlank();
+  print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+  print('⛵  KRAMER IS STRANDED ON THE LAKE', 'event');
+  print('⛵  His pontoon boat is dead in the water. Has been for two hours.', 'event');
+  print('⛵  He\'s waving a Bud Light at passing boats. None have stopped.', 'event');
+  print('⛵  He just called Matt.', 'event');
+  print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+  print('   <strong>help-kramer</strong> (-40 energy, get his 2-stroke motor)', 'choice');
+  print('   <strong>ignore-kramer</strong> (+40 energy, Kramer sinks)', 'choice');
+}
+
+function cmdHelpKramer() {
+  if(!G.pendingEvent || G.pendingEvent.type !== 'kramer') return;
+  G.pendingEvent = null;
+  if(G.energy <= 40) {
+    G.energy = 0;
+    printBlank();
+    print('  Matt heads out. The tow takes everything he had.', 'dim');
+    print('  Kramer is safe. Matt collapses on the dock.', 'dim');
+    print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
+    G.inventory.push({ id:'motor_2stroke', name:'Kramer\'s 2-Stroke Outboard Motor', emoji:'⚙️', paidPrice:0, sellMin:800, sellMax:1200 });
+    print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
+    print('  ⚡ Energy: 0% — Matt is done.', 'error');
+    updateStatus();
+    soberGameOver();
+    return;
+  }
+  G.energy -= 40;
+  G.inventory.push({ id:'motor_2stroke', name:'Kramer\'s 2-Stroke Outboard Motor', emoji:'⚙️', paidPrice:0, sellMin:800, sellMax:1200 });
+  printBlank();
+  print('  Matt heads out and tows Kramer back to the dock.', 'dim');
+  print('  It takes a while. Kramer talks the entire time.', 'dim');
+  print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
+  print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
+  print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
+  updateStatus();
+  afterAction();
+}
+
+function cmdIgnoreKramer() {
+  if(!G.pendingEvent || G.pendingEvent.type !== 'kramer') return;
+  G.pendingEvent = null;
+  G.energy = Math.min(100, G.energy + 40);
+  printBlank();
+  print('  Matt puts his phone face-down on the hood of the truck.', 'dim');
+  print('  Gets back to the listings.', 'dim');
+  printBlank();
+  print('  Kramer sinks with the boat.', 'error');
+  print('  He is fine. He swam. But the boat is gone.', 'dim');
+  print('  He will bring this up for years.', 'dim');
+  print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
+  updateStatus();
+  afterAction();
+}
+
+// ============================================================
 //  COMMANDS
 // ============================================================
 
@@ -941,6 +1011,7 @@ function cmdBuy(idx) {
     print('  Matt watched the other guy load it into a Tahoe.', 'dim');
     print('  In basketball shorts. Witnessing history. Powerless.', 'dim');
     G.energy = Math.max(0, G.energy - 5);
+    btnCtx = { mode: 'default', selectedListing: null };
     afterAction();
     return;
   }
@@ -972,6 +1043,7 @@ function cmdBuy(idx) {
   }
   // remove from listings
   G.listings.splice(i, 1);
+  btnCtx = { mode: 'default', selectedListing: null };
   afterAction();
 }
 
@@ -1080,6 +1152,7 @@ function cmdNegotiate(idx, isLowball) {
     }
   }
 
+  btnCtx = { mode: 'default', selectedListing: null };
   afterAction();
 }
 
@@ -1108,6 +1181,7 @@ function cmdSell(idx) {
     printBlank();
     print(`  Cleared ${items.length} item(s). Revenue: $${money(totalRevenue)} | Total profit: ${totalProfit >= 0 ? '+' : ''}$${money(totalProfit)}`, totalProfit >= 0 ? 'money' : 'error');
     if(totalProfit > 1000) print('  Matt is absolutely LOCKED IN.', 'special');
+    btnCtx = { mode: 'default', selectedListing: null };
     afterAction();
     return;
   }
@@ -1139,6 +1213,7 @@ function cmdSell(idx) {
     print(`  LOSS: $${money(Math.abs(profit))} in the hole. Shake it off.`, 'error');
     print('  Sometimes the market just isn\'t there.', 'dim');
   }
+  btnCtx = { mode: 'default', selectedListing: null };
   afterAction();
 }
 
@@ -2110,6 +2185,9 @@ function renderButtons() {
       });
     } else if (e.type === 'rally') {
       addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
+    } else if (e.type === 'kramer') {
+      addBtn(panel, '⛵ HELP KRAMER (-40 energy)', 'help-kramer', 'btn-choice');
+      addBtn(panel, '🙈 IGNORE (+40 energy)', 'ignore-kramer', 'btn-back');
     }
     return;
   }
@@ -2272,6 +2350,10 @@ function processCommand(raw, displayOverride) {
       cmdCalm(); break;
     case 'catch':
       cmdCatchHogGazin(); break;
+    case 'help-kramer':
+      cmdHelpKramer(); break;
+    case 'ignore-kramer':
+      cmdIgnoreKramer(); break;
     case 'answer': case 'reply': case 'respond': case 'text': case 'ans':
       cmdAnswer(arg); break;
     case 'rally': case 'event': case 'boat': case 'boatrally':
@@ -2330,7 +2412,7 @@ loadYT();
 document.addEventListener('click', loadYT, { once: true });
 
 
-const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch'];
+const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','help-kramer','ignore-kramer'];
 
 const inputEl = document.getElementById('cmd-input');
 inputEl.addEventListener('keydown', function(e) {
