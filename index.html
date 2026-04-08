@@ -649,8 +649,8 @@ function rollRandomEvent() {
         print('  Matt hears his garage door bang. His hog is gone.', 'error');
         setTimeout(() => {
           const hogComment = stolen >= 5000 ? 'That was a nice hog.' : stolen >= 2000 ? 'Decent hog. Gone now.' : 'Must not have been a very nice hog.';
-          print(`  ${hogComment}`, 'dim');
           print(`  💸 Lost $${money(stolen)} — half of Matt\'s cash.`, 'error');
+          print(`  ${hogComment}`, 'dim');
           printBlank();
           updateStatus();
           renderButtons();
@@ -861,7 +861,7 @@ function triggerKramerEvent() {
   print('⛵  He just called Matt.', 'event');
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
   setTimeout(() => {
-    print('   <strong>help-kramer</strong> | <strong>ignore-kramer</strong>', 'choice');
+    print('   <strong>help-kramer</strong> (-40 energy) | <strong>ignore-kramer</strong> (+40 energy)', 'choice');
     out.scrollTop = out.scrollHeight;
   }, 1200);
 }
@@ -902,13 +902,11 @@ function cmdIgnoreKramer() {
   G.pendingEvent = null;
   G.energy = Math.min(100, G.energy + 40);
   printBlank();
-  print('  Matt puts his phone face-down on the hood of the truck.', 'dim');
-  print('  Gets back to the listings.', 'dim');
+  print('  Matt ignores him and gets back to the grind.', 'dim');
   setTimeout(() => {
     printBlank();
     print('  Kramer sinks with the boat.', 'error');
-    print('  He is fine. He swam. But the boat is gone.', 'dim');
-    print('  He will bring this up for years.', 'dim');
+    print('  Matt: "That\'s the way she goes..."', 'dim');
     print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
     out.scrollTop = out.scrollHeight;
     afterAction();
@@ -1301,8 +1299,8 @@ function cmdDrink() {
   if(coin(0.5)) {
     const limeBonus = rnd(8, 15);
     G.energy = Math.min(100, G.energy + limeBonus);
-    print('  🟢 Wait — there\'s a True Lime packet in there. Matt tears it open.', 'special');
-    print(`  True Lime bonus: +${limeBonus} energy. He doesn\'t question it.`, 'special');
+    print('  🟢 Wait — there\'s a True Lime packet here. Matt pours it in.', 'special');
+    print(`  True Lime bonus: +${limeBonus} energy.`, 'special');
   }
   if(G.budLights <= 2) print('  ⚠️  Running low. Select <strong>restock</strong>.', 'event');
   updateStatus();
