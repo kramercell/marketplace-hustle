@@ -861,8 +861,7 @@ function triggerKramerEvent() {
   print('⛵  He just called Matt.', 'event');
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
   setTimeout(() => {
-    print('   <strong>help-kramer</strong> (-40 energy, get his 2-stroke motor)', 'choice');
-    print('   <strong>ignore-kramer</strong> (+40 energy, Kramer sinks)', 'choice');
+    print('   <strong>help-kramer</strong> | <strong>ignore-kramer</strong>', 'choice');
     out.scrollTop = out.scrollHeight;
   }, 1200);
 }
@@ -2221,8 +2220,11 @@ function renderButtons() {
     } else if (e.type === 'rally') {
       addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
     } else if (e.type === 'kramer') {
-      addBtn(panel, '⛵ HELP KRAMER (-40 energy)', 'help-kramer', 'btn-choice');
-      addBtn(panel, '🙈 IGNORE (+40 energy)', 'ignore-kramer', 'btn-back');
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;width:100%';
+      panel.appendChild(row);
+      addBtn(row, '⛵ HELP KRAMER', 'help-kramer', 'btn-choice');
+      addBtn(row, '🙈 IGNORE', 'ignore-kramer', 'btn-back');
     }
     return;
   }
