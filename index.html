@@ -293,6 +293,7 @@
   .game-btn.btn-upgrade   { border-color: #ff44ff; color: #ff44ff; animation: blink 0.6s step-end infinite; }
   .game-btn.btn-upgrade:hover { box-shadow: 0 0 10px rgba(255,68,255,0.4); }
   .game-btn.btn-hoggazin  { border-color: #ff0055; color: #ff0055; animation: blink 0.22s step-end infinite; font-weight: bold; }
+  .game-btn.btn-billy     { border-color: #ffaa00; color: #ffaa00; animation: blink 0.22s step-end infinite; font-weight: bold; }
   .game-btn.btn-amish     { border-color: #88cc55; color: #88cc55; }
   @media (max-width: 768px) {
     /* Status bar: 3-column grid so stats don't stack 4 rows deep */
@@ -482,6 +483,8 @@ const G = {
   maxActionsPerWeek: 10,
   hogGazinActive: false,
   hogGazinSeen: false,
+  billyActive: false,
+  billySeen: false,
   lastCrockettAction: -10,
 };
 
@@ -674,6 +677,7 @@ function redFlash() {
 function rollRandomEvent() {
   if(G.pendingEvent) return; // already have one
   if(G.hogGazinActive) return; // hog gazin window in progress
+  if(G.billyActive) return; // billy window in progress
 
   // Kramer: once per game — check before browse lockout so it can't be starved
   if(!G.kramerSeen && G.kramerTriggerAction > 0 && G.totalActionsTaken >= G.kramerTriggerAction) {
@@ -716,6 +720,39 @@ function rollRandomEvent() {
         }, 1200);
       }
     }, 2000);
+    return;
+  }
+
+  // Crazy Billy: once per game, ~8% chance per action
+  if(!G.billySeen && !G.billyActive && Math.random() < 0.08) {
+    G.billyActive = true;
+    G.billySeen = true;
+    printBlank();
+    print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    print('🚛  CRAZY BILLY ALERT!!!', 'event');
+    print('🚛  A rattling truck just pulled into the driveway.', 'event');
+    print('🚛  It\'s Crazy Billy. He has a weedwhacker. He is not stopping.', 'event');
+    print('🚛  ⚠️  STOP HIM — 1 SECOND BEFORE IT\'S TOO LATE!', 'event');
+    print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    renderButtons();
+    billyTimeout = setTimeout(() => {
+      if (G.billyActive) {
+        G.billyActive = false;
+        const charged = Math.floor(G.money * 0.10);
+        G.money -= charged;
+        G.energy = Math.max(0, G.energy - 20);
+        printBlank();
+        print('  🚛 Billy finished before Matt could stop him.', 'error');
+        print('  He left an invoice on the windshield of the truck.', 'error');
+        setTimeout(() => {
+          print(`  💸 Charged $${money(charged)} (10% of cash) | ⚡ -20 energy`, 'error');
+          printBlank();
+          updateStatus();
+          renderButtons();
+          out.scrollTop = out.scrollHeight;
+        }, 1000);
+      }
+    }, 1000);
     return;
   }
 
@@ -2240,6 +2277,27 @@ function amishRobbery(item, listingIdx) {
 //  HOG GAZIN'
 // ============================================================
 let hogGazinTimeout = null;
+let billyTimeout = null;
+
+function cmdStopBilly() {
+  if (!G.billyActive) return;
+  if (billyTimeout) { clearTimeout(billyTimeout); billyTimeout = null; }
+  G.billyActive = false;
+  G.energy = 100;
+  G.inventory.push({ id:'landscaping_tools', name:'Landscaping Tools (fell off Billy\'s truck)', emoji:'🌿', paidPrice:0, sellMin:800, sellMax:1200 });
+  printBlank();
+  print('  🚛 Matt steps in front of the truck. Billy locks eyes with him.', 'dim');
+  print('  Billy reverses. Aggressively. Down the entire street.', 'dim');
+  setTimeout(() => {
+    print('  Tools clattered off the truck bed on the way out.', 'money');
+    print('  🌿 Landscaping Tools added to inventory. Est. $800–$1,200.', 'money');
+    print('  ⚡ Energy restored to 100%', 'money');
+    out.scrollTop = out.scrollHeight;
+    updateStatus();
+    afterAction();
+    renderButtons();
+  }, 1200);
+}
 
 function cmdCatchHogGazin() {
   if (!G.hogGazinActive) return;
@@ -2306,6 +2364,11 @@ function renderButtons() {
   panel.innerHTML = '';
 
   if (G.phase === 'over') return;
+
+  // Crazy Billy — flashing stop button (non-blocking)
+  if (G.billyActive) {
+    addBtn(panel, '🚛 STOP BILLY!!!', 'stop-billy', 'btn-billy');
+  }
 
   // Hog gazin' — show flashing catch button at top (non-blocking)
   if (G.hogGazinActive) {
@@ -2495,6 +2558,8 @@ function processCommand(raw, displayOverride) {
       cmdCalm(); break;
     case 'catch':
       cmdCatchHogGazin(); break;
+    case 'stop-billy':
+      cmdStopBilly(); break;
     case 'help-kramer':
       cmdHelpKramer(); break;
     case 'ignore-kramer':
@@ -2574,7 +2639,7 @@ loadYT();
 document.addEventListener('click', loadYT, { once: true });
 
 
-const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','help-kramer','ignore-kramer'];
+const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','stop-billy','help-kramer','ignore-kramer'];
 
 const inputEl = document.getElementById('cmd-input');
 inputEl.addEventListener('keydown', function(e) {
