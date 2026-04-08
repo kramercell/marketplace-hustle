@@ -648,7 +648,8 @@ function rollRandomEvent() {
         print('  👀 They slipped away down Iris Drive.', 'dim');
         print('  Matt hears his garage door bang. His hog is gone.', 'error');
         setTimeout(() => {
-          print('  The hog gazer got what he came for.', 'error');
+          const hogComment = stolen >= 5000 ? 'That was a nice hog.' : stolen >= 2000 ? 'Decent hog. Gone now.' : 'Must not have been a very nice hog.';
+          print(`  ${hogComment}`, 'dim');
           print(`  💸 Lost $${money(stolen)} — half of Matt\'s cash.`, 'error');
           printBlank();
           updateStatus();
