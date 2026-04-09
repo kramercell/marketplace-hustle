@@ -602,6 +602,7 @@ function _scrollStep() {
 }
 
 function _triggerScroll() {
+  if (introScrolling) return; // intro has its own scroll system
   _scrollTarget = out.scrollHeight;
   if (!_scrollRAF && !_userScrolling) _scrollRAF = requestAnimationFrame(_scrollStep);
 }
@@ -3079,7 +3080,7 @@ out.scrollTop = 0;
 _introScrollPos = 0;
 introScrollDelayTimer = setTimeout(() => {
   introScrollDelayTimer = null;
-  if (introScrolling) { _userScrolling = true; introScrollRAF = requestAnimationFrame(_introScrollStep); }
+  if (introScrolling) introScrollRAF = requestAnimationFrame(_introScrollStep);
 }, 2500);
 
 out.addEventListener('touchstart', stopIntroScroll, { passive: true });
