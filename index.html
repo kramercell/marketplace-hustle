@@ -2659,6 +2659,12 @@ function startMusic() {
   bgMusic.muted = false;
   bgMusic.play().catch(() => {});
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && G.started && !musicMuted) {
+    bgMusic.play().catch(() => {});
+  }
+});
 function toggleMute() {
   musicMuted = !musicMuted;
   bgMusic.muted = musicMuted;
