@@ -769,6 +769,7 @@ function rollRandomEvent() {
         print('  He left an invoice on the windshield of the truck.', 'error');
         setTimeout(() => {
           print(`  💸 Charged $${money(charged)} (10% of cash) | ⚡ -20 energy`, 'error');
+          print('  At least it looks great...', 'dim');
           printBlank();
           updateStatus();
           renderButtons();
