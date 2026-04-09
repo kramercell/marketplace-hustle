@@ -1262,10 +1262,10 @@ function cmdResistRyan() {
     print(`  💪 Ryan: ${pick(ryanExits)}`, 'money');
     print('  He drives off. The deal dies. Your money lives.', 'dim');
     printBlank();
-
-    afterAction();
+    afterAction(); // one action for the whole encounter
     renderButtons();
   }
+  // no afterAction() on individual resist taps — only the final resolution counts
 }
 
 function cmdCaveRyan() {
