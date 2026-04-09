@@ -1697,17 +1697,21 @@ function startGameOverScroll(fromY, headerIdx) {
   // Flash the header lines for 2 seconds before scrolling
   const headerEls = Array.from(out.children).slice(headerIdx, headerIdx + 6);
   headerEls.forEach(el => el.classList.add('end-header'));
+  let active = true;
+  function stop() {
+    active = false;
+    out.removeEventListener('touchstart', stop);
+    out.removeEventListener('wheel', stop);
+    out.removeEventListener('mousedown', stop);
+  }
+  out.addEventListener('touchstart', stop, { passive: true });
+  out.addEventListener('wheel', stop, { passive: true });
+  out.addEventListener('mousedown', stop);
   setTimeout(() => {
     headerEls.forEach(el => el.classList.remove('end-header'));
+    if (!active) return;
     let pos = fromY;
     let lastTime = null;
-    let active = true;
-    function stop() {
-      active = false;
-      out.removeEventListener('touchstart', stop);
-      out.removeEventListener('wheel', stop);
-      out.removeEventListener('mousedown', stop);
-    }
     function step(ts) {
       if (!active) return;
       if (lastTime === null) lastTime = ts;
@@ -1717,9 +1721,6 @@ function startGameOverScroll(fromY, headerIdx) {
       out.scrollTop = pos;
       if (pos < out.scrollHeight - out.clientHeight) requestAnimationFrame(step);
     }
-    out.addEventListener('touchstart', stop, { passive: true });
-    out.addEventListener('wheel', stop, { passive: true });
-    out.addEventListener('mousedown', stop);
     requestAnimationFrame(step);
   }, 2000);
 }
@@ -2759,7 +2760,7 @@ function processCommand(raw, displayOverride) {
 
   // T-Swan is pending — anything other than deal loses the day
   if(G.pendingEvent && G.pendingEvent.type === 'tswam') {
-    if(!['deal','tswan','t-swan','tswam'].includes(cmd)) {
+    if(!['deal','tswan','t-swan','tswam','ignore-tswan'].includes(cmd)) {
       cmdNext(); // cmdNext has the lost-week narrative + week advance
       return;
     }
@@ -3015,12 +3016,14 @@ intro();
 // Intro auto-scroll: slowly drift down from top, stop when user touches
 let introScrolling = true;
 let introScrollRAF = null;
+let introScrollDelayTimer = null;
 let _introScrollPos = 0;
 let _introLastTime = null;
 
 function stopIntroScroll() {
   if (introScrolling) {
     introScrolling = false;
+    if (introScrollDelayTimer) { clearTimeout(introScrollDelayTimer); introScrollDelayTimer = null; }
     if (introScrollRAF) { cancelAnimationFrame(introScrollRAF); introScrollRAF = null; }
     out.removeEventListener('touchstart', stopIntroScroll);
     out.removeEventListener('wheel', stopIntroScroll);
@@ -3040,7 +3043,8 @@ function _introScrollStep(ts) {
 
 out.scrollTop = 0;
 _introScrollPos = 0;
-setTimeout(() => {
+introScrollDelayTimer = setTimeout(() => {
+  introScrollDelayTimer = null;
   if (introScrolling) introScrollRAF = requestAnimationFrame(_introScrollStep);
 }, 2500);
 
