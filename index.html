@@ -188,6 +188,16 @@
     vertical-align: middle;
   }
 
+  #bar-title {
+    margin-left: auto;
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #00aa22;
+    letter-spacing: 1px;
+    user-select: none;
+    white-space: nowrap;
+  }
+
   #music-bar {
     background: #001a00;
     border-bottom: 1px solid #003300;
@@ -376,6 +386,7 @@
   <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.4" oninput="setVolume(this.value)" onchange="setVolume(this.value)">
   <button class="font-btn" id="font-out" onclick="adjustFont(-1)" title="Smaller text">🔍−</button>
   <button class="font-btn" id="font-in"  onclick="adjustFont(1)"  title="Larger text">🔍+</button>
+  <span id="bar-title">MARKETPLACE HUSTLE</span>
 </div>
 
 <div id="output"></div>
