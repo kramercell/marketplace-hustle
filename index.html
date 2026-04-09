@@ -1156,12 +1156,12 @@ function triggerRyanEvent() {
   printBlank();
   print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
   print('🎿  RYAN IS IN THE DRIVEWAY', 'special');
-  print(`🎿  He has an INCREDIBLE deal on a ${e.gear}.`, 'special');
-  print(`🎿  "Bro I'm practically GIVING this away. ${money(e.cost)} bucks. That's NOTHING."`, 'special');
+  print(`🎿  He's got a DISCOUNT CODE for Boyne — ${e.gear}.`, 'special');
+  print(`🎿  "Bro it's basically free at this price. Only ${money(e.cost)}. Boyne charges WAY more."`, 'special');
   print('🎿  It IS a great deal. You don\'t need it. But it\'s a GREAT deal.', 'dim');
   print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
   setTimeout(() => {
-    print('   <strong>resist-ryan</strong> 10x in 4 seconds to send him away.', 'choice');
+    print('   <strong>resist-ryan</strong> 10x in 7 seconds to send him away.', 'choice');
     out.scrollTop = out.scrollHeight;
     renderButtons();
     if (ryanResistTimeout) clearTimeout(ryanResistTimeout);
@@ -1169,7 +1169,7 @@ function triggerRyanEvent() {
       if (G.pendingEvent && G.pendingEvent.type === 'ryan') {
         cmdCaveRyan();
       }
-    }, 4000);
+    }, 7000);
   }, 1200);
 }
 
@@ -1207,7 +1207,7 @@ function cmdCaveRyan() {
   const cost = Math.min(G.money, e.cost);
   G.money -= cost;
   printBlank();
-  print(`  💸 You caved. $${money(cost)} handed to Ryan.`, 'error');
+  print(`  💸 You used the code. $${money(cost)} dropped at Boyne.`, 'error');
   print(`  ${e.gear} is now in the garage.`, 'dim');
   print('  Worth it.', 'dim');
   printBlank();
