@@ -837,8 +837,8 @@ function rollRandomEvent() {
     return;
   }
 
-  // Crockett: fires once trigger action is reached
-  if(!G.crockettSeen && G.totalActionsTaken >= G.crockettTriggerAction) {
+  // Crockett: fires once trigger action is reached, only in weeks 2-4
+  if(!G.crockettSeen && G.totalActionsTaken >= G.crockettTriggerAction && G.week >= 2 && G.week <= 4) {
     G.crockettSeen = true;
     const shift = coin() ? 1 : -1;
     const oldWeek = G.week;
