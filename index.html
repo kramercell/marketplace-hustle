@@ -577,11 +577,41 @@ function beerClass(b) {
 // ============================================================
 const out = document.getElementById('output');
 
+// Smooth auto-scroll: eases toward targetScrollY on every print()
+let _scrollTarget = 0;
+let _scrollRAF = null;
+let _userScrolling = false;
+let _userScrollTimer = null;
+
+out.addEventListener('touchstart', () => { _userScrolling = true; }, { passive: true });
+out.addEventListener('mousedown',  () => { _userScrolling = true; });
+out.addEventListener('wheel',      () => { _userScrolling = true; }, { passive: true });
+out.addEventListener('scroll', () => {
+  // If user scrolled away from bottom, pause auto-scroll briefly
+  if (_userScrollTimer) clearTimeout(_userScrollTimer);
+  _userScrollTimer = setTimeout(() => { _userScrolling = false; }, 1200);
+});
+
+function _scrollStep() {
+  _scrollRAF = null;
+  if (_userScrolling) return;
+  const diff = _scrollTarget - out.scrollTop;
+  if (Math.abs(diff) < 1) { out.scrollTop = _scrollTarget; return; }
+  out.scrollTop += diff * 0.18;
+  _scrollRAF = requestAnimationFrame(_scrollStep);
+}
+
+function _triggerScroll() {
+  _scrollTarget = out.scrollHeight;
+  if (!_scrollRAF && !_userScrolling) _scrollRAF = requestAnimationFrame(_scrollStep);
+}
+
 function print(text='', cls='') {
   const d = document.createElement('div');
   d.className = 'line' + (cls ? ' '+cls : '');
   d.innerHTML = (buzzActive && text && !text.startsWith('╔') && !text.startsWith('║') && !text.startsWith('╚')) ? buzzify(text) : text;
   out.appendChild(d);
+  _triggerScroll();
 }
 
 function printBlank() { print('&nbsp;'); }
@@ -766,7 +796,7 @@ function rollRandomEvent() {
     print('👀  Someone just walked by and is STARING at the garage.', 'event');
     print('👀  Real suspicious-like. Eyes all big. Hog gazin\' at Matt\'s motorcycle.', 'event');
     print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
-    out.scrollTop = out.scrollHeight;
+
     renderButtons();
     hogGazinTimeout = setTimeout(() => {
       if (G.hogGazinActive) {
@@ -783,7 +813,7 @@ function rollRandomEvent() {
           printBlank();
           updateStatus();
           renderButtons();
-          out.scrollTop = out.scrollHeight;
+
         }, 1200);
       }
     }, 4000);
@@ -801,7 +831,7 @@ function rollRandomEvent() {
     print('🚛  A rattling truck just pulled into the driveway at 2am.', 'event');
     print('🚛  It\'s Crazy Billy. He\'s started landscaping your yard!', 'event');
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
-    out.scrollTop = out.scrollHeight;
+
     renderButtons();
     billyTimeout = setTimeout(() => {
       if (G.billyActive) {
@@ -818,7 +848,7 @@ function rollRandomEvent() {
           printBlank();
           updateStatus();
           renderButtons();
-          out.scrollTop = out.scrollHeight;
+
         }, 1000);
       }
     }, 2500);
@@ -858,7 +888,7 @@ function rollRandomEvent() {
       print(`☮️  Week ${oldWeek} → Week ${G.week}.`, 'special');
       print('☮️  Matt: "I ain\'t shook."', 'special');
       print('☮️  Slides stay on. The cloud clears. The hustle continues.', 'special');
-      out.scrollTop = out.scrollHeight;
+
       updateStatus();
     }, 1900);
     return;
@@ -945,7 +975,7 @@ function rollRandomEvent() {
         print('  ...', 'dim');
         print('  They have not responded.', 'dim');
         print('  They will not respond.', 'dim');
-        out.scrollTop = out.scrollHeight;
+
       }, 1200);
     }, 900);
     return;
@@ -977,7 +1007,7 @@ function triggerGriffinEvent() {
   print(`🐕  The whole neighborhood can hear this.`, 'griffin');
   print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
   print('   Select <strong>calm</strong> to settle him. (Results may vary.)', 'choice');
-  out.scrollTop = out.scrollHeight;
+
   if (griffinAutoIgnoreTimeout) clearTimeout(griffinAutoIgnoreTimeout);
   griffinAutoIgnoreTimeout = setTimeout(() => {
     if (G.pendingEvent && G.pendingEvent.type === 'griffin') {
@@ -986,7 +1016,7 @@ function triggerGriffinEvent() {
       printBlank();
       print('  🐕 Griffin kept going. Matt ignored it. Bite risk crept up.', 'griffin');
       print(`  🐕 Bite risk: ${G.biteMeter}%`, G.biteMeter >= 40 ? 'error' : 'event');
-      out.scrollTop = out.scrollHeight;
+
       renderButtons();
     }
   }, 5000);
@@ -1041,7 +1071,7 @@ function triggerBuzz() {
     d.innerHTML = '  ' + msg;
     out.appendChild(d);
     printBlank();
-    out.scrollTop = out.scrollHeight;
+
   }, 3000);
 }
 
@@ -1079,7 +1109,7 @@ function triggerTSwanEvent() {
   print('🚨 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'error');
   setTimeout(() => {
     print('   Select <strong>deal</strong> to handle T-Swan.', 'choice');
-    out.scrollTop = out.scrollHeight;
+
   }, 1200);
 }
 
@@ -1119,7 +1149,7 @@ function triggerKramerEvent() {
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
   print('   <strong>help-kramer</strong> (-40 energy) | <strong>ignore-kramer</strong> (+40 energy)', 'choice');
   print('   ⚠️  5 seconds before Matt stops answering his phone.', 'choice');
-  out.scrollTop = out.scrollHeight;
+
   if (kramerAutoTimeout) clearTimeout(kramerAutoTimeout);
   kramerAutoTimeout = setTimeout(() => {
     if (G.pendingEvent && G.pendingEvent.type === 'kramer') {
@@ -1129,7 +1159,7 @@ function triggerKramerEvent() {
       print('  ⛵ Matt put his phone face down. Kramer sinks with the boat.', 'dim');
       print('  Matt: "That\'s the way she goes..."', 'dim');
       print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
-      out.scrollTop = out.scrollHeight;
+
       updateStatus();
       renderButtons();
     }
@@ -1162,7 +1192,7 @@ function cmdHelpKramer() {
     print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
     print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
     print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
-    out.scrollTop = out.scrollHeight;
+
     afterAction();
     renderButtons();
   }, 1200);
@@ -1180,7 +1210,7 @@ function cmdIgnoreKramer() {
     print('  Kramer sinks with the boat.', 'error');
     print('  Matt: "That\'s the way she goes..."', 'dim');
     print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
-    out.scrollTop = out.scrollHeight;
+
     afterAction();
     renderButtons();
   }, 1200);
@@ -1202,7 +1232,7 @@ function triggerRyanEvent() {
   print('🎿  It IS a great deal. You don\'t need it. But it\'s a GREAT deal.', 'dim');
   print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
   print('   <strong>resist-ryan</strong> 10x in 7 seconds to send him away.', 'choice');
-  out.scrollTop = out.scrollHeight;
+
   renderButtons();
   if (ryanResistTimeout) clearTimeout(ryanResistTimeout);
   ryanResistTimeout = setTimeout(() => {
@@ -1231,7 +1261,7 @@ function cmdResistRyan() {
     print(`  💪 Ryan: ${pick(ryanExits)}`, 'money');
     print('  He drives off. The deal dies. Your money lives.', 'dim');
     printBlank();
-    out.scrollTop = out.scrollHeight;
+
     afterAction();
     renderButtons();
   }
@@ -1250,7 +1280,7 @@ function cmdCaveRyan() {
   print(`  ${e.gear} is now in the garage.`, 'dim');
   print('  Worth it.', 'dim');
   printBlank();
-  out.scrollTop = out.scrollHeight;
+
   updateStatus();
   afterAction();
   renderButtons();
@@ -1695,6 +1725,7 @@ function cmdUpgrade() {
 }
 
 function startGameOverScroll(fromY, headerIdx) {
+  _userScrolling = true; // pause smooth-scroll so game-over RAF has full control
   out.scrollTop = fromY;
   // Flash the header lines for 2 seconds before scrolling
   const headerEls = Array.from(out.children).slice(headerIdx, headerIdx + 6);
@@ -2510,7 +2541,7 @@ function amishRobbery(item, listingIdx) {
       print('  Elder: "The Lord works in mysterious ways." *hands back the money and the furniture, leaves at 35mph*', 'dim');
       printBlank();
       print(`  💰 Money back: +$${money(actualStolen)} | ${item.emoji} ${item.name} added to inventory`, 'money');
-      out.scrollTop = out.scrollHeight;
+
       afterAction();
       renderButtons();
     }, 1200);
@@ -2542,7 +2573,7 @@ function cmdStopBilly() {
     print('  Tools clattered off the truck bed on the way out.', 'money');
     print('  🌿 Landscaping Tools added to inventory. Est. $800–$1,200.', 'money');
     print('  ⚡ Energy restored to 100%', 'money');
-    out.scrollTop = out.scrollHeight;
+
     updateStatus();
     afterAction();
     renderButtons();
@@ -2563,7 +2594,7 @@ function cmdCatchHogGazin() {
     print('  Matt sprinted across the lawn in Kirkland slides.', 'dim');
     print('  The slides gave him traction nobody expected. Including Matt.', 'dim');
     print('  The hog gazer tried to run. The slides were faster.', 'dim');
-    out.scrollTop = out.scrollHeight;
+
     setTimeout(() => {
       printBlank();
       print('  Matt\'s phone rings: FBI field office, Atlanta division.', 'event');
@@ -2574,13 +2605,13 @@ function cmdCatchHogGazin() {
       print('  Matt: "Yeah."', 'money');
       print('  FBI: "..."', 'event');
       print('  FBI: "Okay. The reward is yours."', 'event');
-      out.scrollTop = out.scrollHeight;
+
       setTimeout(() => {
         printBlank();
         print('  💰 $2,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
         print('  Griffin barked the entire time. For once, he was right.', 'griffin');
         printBlank();
-        out.scrollTop = out.scrollHeight;
+
         afterAction();
         renderButtons();
       }, 1400);
@@ -2856,7 +2887,7 @@ function processCommand(raw, displayOverride) {
   if (G.phase !== 'over') {
     if (_browseAliases.includes(cmd)) {
       btnCtx = { mode: 'listings', selectedListing: null };
-      out.scrollTop = out.scrollHeight;
+
     } else if (_buyAliases.includes(cmd)) {
       btnCtx = { mode: G.listings.length > 0 ? 'listings' : 'default', selectedListing: null };
       out.scrollTop = scrollAnchor;
@@ -3030,6 +3061,7 @@ function stopIntroScroll() {
     out.removeEventListener('touchstart', stopIntroScroll);
     out.removeEventListener('wheel', stopIntroScroll);
     out.removeEventListener('mousedown', stopIntroScroll);
+    _userScrolling = false; // re-enable smooth auto-scroll for gameplay
   }
 }
 
@@ -3047,7 +3079,7 @@ out.scrollTop = 0;
 _introScrollPos = 0;
 introScrollDelayTimer = setTimeout(() => {
   introScrollDelayTimer = null;
-  if (introScrolling) introScrollRAF = requestAnimationFrame(_introScrollStep);
+  if (introScrolling) { _userScrolling = true; introScrollRAF = requestAnimationFrame(_introScrollStep); }
 }, 2500);
 
 out.addEventListener('touchstart', stopIntroScroll, { passive: true });
