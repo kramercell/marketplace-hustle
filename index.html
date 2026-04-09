@@ -1659,6 +1659,8 @@ function cmdDrink() {
     recentRecharges = [];
     triggerBuzz();
   }
+  afterAction();
+  renderButtons();
 }
 
 function cmdRestock() {
