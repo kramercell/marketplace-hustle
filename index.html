@@ -337,6 +337,15 @@
     /* Mobile-only output lines */
     .line.mobile-only { display: block; }
 
+    /* Big two-line title on mobile */
+    .line.title.mobile-only {
+      font-size: 52px;
+      text-align: center;
+      line-height: 1.05;
+      letter-spacing: 2px;
+      text-shadow: 0 0 24px rgba(0,255,65,0.5);
+    }
+
     /* Buttons: bigger tap targets, panel capped so it doesn't eat the screen */
     .game-btn { font-size: 15px; padding: 11px 16px; }
     #btn-panel {
@@ -2903,7 +2912,8 @@ function intro() {
   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚══════╝</pre>`, '');
   printBlank();
   print('  ════════════════════════════════════════════════════', 'dim');
-  print('                  MARKETPLACE HUSTLE', 'title mobile-only');
+  print("MATT'S", 'title mobile-only');
+  print('MARKETPLACE HUSTLE', 'title mobile-only');
   print('              A FACEBOOK MARKETPLACE FLIPPING SIM', 'title');
   print('               ft. MATT · GRIFFIN &amp;', 'title');
   print('                ✦ THE YING YANG TWINS ✦', 'special');
