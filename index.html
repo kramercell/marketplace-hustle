@@ -132,6 +132,7 @@
 
   .blink { animation: blink 1s step-end infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .end-header { animation: blink 0.35s step-end infinite; }
 
   @keyframes drunkNeighbor {
     0%   { filter: none; }
@@ -1696,35 +1697,41 @@ function cmdUpgrade() {
   print(`  New sell value: $${money(item.sellMin)}–$${money(item.sellMax)}`, 'money');
 }
 
-function startGameOverScroll(fromY) {
+function startGameOverScroll(fromY, headerIdx) {
   out.scrollTop = fromY;
-  let pos = fromY;
-  let lastTime = null;
-  let active = true;
-  function stop() {
-    active = false;
-    out.removeEventListener('touchstart', stop);
-    out.removeEventListener('wheel', stop);
-    out.removeEventListener('mousedown', stop);
-  }
-  function step(ts) {
-    if (!active) return;
-    if (lastTime === null) lastTime = ts;
-    const dt = Math.min(ts - lastTime, 100);
-    lastTime = ts;
-    pos += dt * 0.05;
-    out.scrollTop = pos;
-    if (pos < out.scrollHeight - out.clientHeight) requestAnimationFrame(step);
-  }
-  out.addEventListener('touchstart', stop, { passive: true });
-  out.addEventListener('wheel', stop, { passive: true });
-  out.addEventListener('mousedown', stop);
-  requestAnimationFrame(step);
+  // Flash the header lines for 2 seconds before scrolling
+  const headerEls = Array.from(out.children).slice(headerIdx, headerIdx + 6);
+  headerEls.forEach(el => el.classList.add('end-header'));
+  setTimeout(() => {
+    headerEls.forEach(el => el.classList.remove('end-header'));
+    let pos = fromY;
+    let lastTime = null;
+    let active = true;
+    function stop() {
+      active = false;
+      out.removeEventListener('touchstart', stop);
+      out.removeEventListener('wheel', stop);
+      out.removeEventListener('mousedown', stop);
+    }
+    function step(ts) {
+      if (!active) return;
+      if (lastTime === null) lastTime = ts;
+      const dt = Math.min(ts - lastTime, 100);
+      lastTime = ts;
+      pos += dt * 0.05;
+      out.scrollTop = pos;
+      if (pos < out.scrollHeight - out.clientHeight) requestAnimationFrame(step);
+    }
+    out.addEventListener('touchstart', stop, { passive: true });
+    out.addEventListener('wheel', stop, { passive: true });
+    out.addEventListener('mousedown', stop);
+    requestAnimationFrame(step);
+  }, 2000);
 }
 
 function griffinBiteGameOver() {
   G.phase = 'over';
-  const _endTop = out.scrollHeight;
+  const _endTop = out.scrollHeight; const _endIdx = out.children.length;
   printBlank();
   print('╔═══════════════════════════════════════════════════════╗', 'error');
   print('║       GRIFFIN BIT SOMEONE. LAWSUIT FILED.            ║', 'error');
@@ -1761,12 +1768,12 @@ function griffinBiteGameOver() {
   print('  Refresh to try again. Maybe talk to the dog this time.', 'dim');
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
-  startGameOverScroll(_endTop);
+  startGameOverScroll(_endTop, _endIdx);
 }
 
 function soberGameOver() {
   G.phase = 'over';
-  const _endTop = out.scrollHeight;
+  const _endTop = out.scrollHeight; const _endIdx = out.children.length;
   printBlank();
   print('╔═══════════════════════════════════════════════════════╗', 'error');
   print('║              MATT LOST INTEREST.                     ║', 'error');
@@ -1792,7 +1799,7 @@ function soberGameOver() {
   print('  Refresh and try again. Matt\'s got more hustle in him.', 'dim');
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
-  startGameOverScroll(_endTop);
+  startGameOverScroll(_endTop, _endIdx);
 }
 
 function cmdDeal() {
@@ -1831,6 +1838,7 @@ function cmdIgnoreTSwan() {
 }
 
 function cmdIgnoreGriffin() {
+  if (griffinAutoIgnoreTimeout) { clearTimeout(griffinAutoIgnoreTimeout); griffinAutoIgnoreTimeout = null; }
   if (!G.pendingEvent || G.pendingEvent.type !== 'griffin') return;
   const bite = rnd(8, 18);
   G.biteMeter = Math.min(100, G.biteMeter + bite);
@@ -2107,7 +2115,7 @@ function cmdNext() {
 // ============================================================
 function endGame() {
   G.phase = 'over';
-  const _endTop = out.scrollHeight;
+  const _endTop = out.scrollHeight; const _endIdx = out.children.length;
   const profit = G.money - G.startMoney;
   const rallyOk = G.rallyPrep >= 75;
 
@@ -2138,7 +2146,7 @@ function endGame() {
 
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
-  startGameOverScroll(_endTop);
+  startGameOverScroll(_endTop, _endIdx);
 }
 
 // ── Rally failed (prep < 75%) ────────────────────────────────
