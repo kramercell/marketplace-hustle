@@ -1167,10 +1167,10 @@ function cmdBrowse() {
   print('└─────────────────────────────────────────────────────────────┘', 'system');
   G.listings.forEach((item) => {
     const profit_est = Math.round((item.sellMin + item.sellMax)/2) - item.askPrice;
-    const profitStr = profit_est > 0 ? `<span style="color:#004d00">~$${money(profit_est)} profit</span>` : `<span style="color:#663300">risky</span>`;
+    const profitStr = profit_est > 0 ? `<span style="color:#004d00">  ~+$${money(profit_est)}</span>` : `<span style="color:#663300">  risky</span>`;
     const specialTag = item.special ? ' <span style="color:#ff44ff;animation:blink 0.5s step-end infinite">⚠️ RECALLED!!!</span>' : '';
-    print(`  ${item.emoji} <strong style="color:#00ff41">${item.name}  $${money(item.askPrice)}</strong>${specialTag}`, '');
-    print(`       📝 "${item.condition}" | 👤 ${item.seller}  ${profitStr}`, 'dim');
+    print(`  ${item.emoji} <strong style="color:#00ff41">${item.name}  $${money(item.askPrice)}</strong>${profitStr}${specialTag}`, '');
+    print(`       📝 "${item.condition}" | 👤 ${item.seller}`, 'dim');
   });
   printBlank();
   print(`  Select a listing to buy, negotiate, or lowball.`, 'choice');
