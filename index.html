@@ -1075,7 +1075,7 @@ function triggerKramerEvent() {
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
   setTimeout(() => {
     print('   <strong>help-kramer</strong> (-40 energy) | <strong>ignore-kramer</strong> (+40 energy)', 'choice');
-    print('   ⚠️  3 seconds before Matt stops answering his phone.', 'dim');
+    print('   ⚠️  5 seconds before Matt stops answering his phone.', 'dim');
     out.scrollTop = out.scrollHeight;
   }, 1200);
   if (kramerAutoTimeout) clearTimeout(kramerAutoTimeout);
@@ -1091,7 +1091,7 @@ function triggerKramerEvent() {
       updateStatus();
       renderButtons();
     }
-  }, 3000);
+  }, 5000);
 }
 
 function cmdHelpKramer() {
