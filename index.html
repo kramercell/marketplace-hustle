@@ -1696,8 +1696,35 @@ function cmdUpgrade() {
   print(`  New sell value: $${money(item.sellMin)}–$${money(item.sellMax)}`, 'money');
 }
 
+function startGameOverScroll(fromY) {
+  out.scrollTop = fromY;
+  let pos = fromY;
+  let lastTime = null;
+  let active = true;
+  function stop() {
+    active = false;
+    out.removeEventListener('touchstart', stop);
+    out.removeEventListener('wheel', stop);
+    out.removeEventListener('mousedown', stop);
+  }
+  function step(ts) {
+    if (!active) return;
+    if (lastTime === null) lastTime = ts;
+    const dt = Math.min(ts - lastTime, 100);
+    lastTime = ts;
+    pos += dt * 0.05;
+    out.scrollTop = pos;
+    if (pos < out.scrollHeight - out.clientHeight) requestAnimationFrame(step);
+  }
+  out.addEventListener('touchstart', stop, { passive: true });
+  out.addEventListener('wheel', stop, { passive: true });
+  out.addEventListener('mousedown', stop);
+  requestAnimationFrame(step);
+}
+
 function griffinBiteGameOver() {
   G.phase = 'over';
+  const _endTop = out.scrollHeight;
   printBlank();
   print('╔═══════════════════════════════════════════════════════╗', 'error');
   print('║       GRIFFIN BIT SOMEONE. LAWSUIT FILED.            ║', 'error');
@@ -1734,10 +1761,12 @@ function griffinBiteGameOver() {
   print('  Refresh to try again. Maybe talk to the dog this time.', 'dim');
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+  startGameOverScroll(_endTop);
 }
 
 function soberGameOver() {
   G.phase = 'over';
+  const _endTop = out.scrollHeight;
   printBlank();
   print('╔═══════════════════════════════════════════════════════╗', 'error');
   print('║              MATT LOST INTEREST.                     ║', 'error');
@@ -1763,6 +1792,7 @@ function soberGameOver() {
   print('  Refresh and try again. Matt\'s got more hustle in him.', 'dim');
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+  startGameOverScroll(_endTop);
 }
 
 function cmdDeal() {
@@ -2077,6 +2107,7 @@ function cmdNext() {
 // ============================================================
 function endGame() {
   G.phase = 'over';
+  const _endTop = out.scrollHeight;
   const profit = G.money - G.startMoney;
   const rallyOk = G.rallyPrep >= 75;
 
@@ -2107,6 +2138,7 @@ function endGame() {
 
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+  startGameOverScroll(_endTop);
 }
 
 // ── Rally failed (prep < 75%) ────────────────────────────────
