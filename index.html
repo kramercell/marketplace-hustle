@@ -353,7 +353,7 @@
   <div class="stat">📦 INVENTORY: <span id="s-inv">0</span> items</div>
 </div>
 
-<audio id="bg-music" src="90sChiptune.mp3" loop></audio>
+<audio id="bg-music" src="90sChiptune.mp3" loop autoplay muted></audio>
 <div id="music-bar">
   <span style="color:#004400">🎵</span>
   <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
@@ -2639,9 +2639,10 @@ const bgMusic = document.getElementById('bg-music');
 bgMusic.volume = 0.4;
 let musicMuted = false;
 
+// Unmute as soon as possible — muted autoplay is allowed by browsers
 function startMusic() {
-  if (!bgMusic.paused) return;
-  bgMusic.play().catch(() => {});
+  bgMusic.muted = false;
+  if (bgMusic.paused) bgMusic.play().catch(() => {});
 }
 function toggleMute() {
   musicMuted = !musicMuted;
@@ -2675,9 +2676,9 @@ function adjustFont(dir) {
   document.getElementById('font-in').disabled  = fontStep >= 2;
 }
 
-// Try autoplay; fall back to first user interaction
-startMusic();
+// Unmute on first interaction (required by some browsers)
 document.addEventListener('click', startMusic, { once: true });
+document.addEventListener('keydown', startMusic, { once: true });
 
 
 const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','stop-billy','help-kramer','ignore-kramer'];
