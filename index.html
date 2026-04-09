@@ -1836,7 +1836,7 @@ function cmdAnswer(num) {
 
 function cmdPrep() {
   if(G.energy <= 0) { soberGameOver(); return; }
-  if(G.weeklyPrepGained >= 25) {
+  if(G.weeklyPrepGained >= 25 && G.week < G.totalWeeks) {
     print('  You\'ve done all the rally prep you can this week. Come back next week.', 'event');
     print('  Matt needs to pace himself. And drink more Bud Light.', 'dim');
     return;
