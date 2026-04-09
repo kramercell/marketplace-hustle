@@ -2998,7 +2998,18 @@ function intro() {
     print('  ─────────────────────────────────────────────────────', 'dim');
     print('  It\'s the start of Week 1.', 'dim');
     print('  Matt is in his driveway. Slides on. Beer in hand.', 'dim');
-    print('  Griffin is barking at a leaf.', 'griffin');
+    print('  ' + pick([
+      'Griffin is barking at a leaf.',
+      'Griffin is staring at the fence. Nothing is there.',
+      'Griffin is sprinting in circles for no reason.',
+      'Griffin is barking at his own water bowl.',
+      'Griffin just ate some grass. No explanation.',
+      'Griffin is sitting on the driveway looking at the sky.',
+      'Griffin is trying to fit a stick through the door. It\'s too wide.',
+      'Griffin is barking at the mailbox.',
+      'Griffin found something in the yard. Nobody knows what.',
+      'Griffin has been barking at the same spot for 4 minutes.',
+    ]), 'griffin');
     print('  Facebook Marketplace is open on his phone.', 'dim');
     print('  The deals are out there. They\'re not going to flip themselves.', 'dim');
     print('  ─────────────────────────────────────────────────────', 'dim');
