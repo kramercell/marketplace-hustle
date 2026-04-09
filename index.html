@@ -466,6 +466,28 @@ const OTHER_RALLY_QUESTIONS = [
 ];
 
 // ============================================================
+//  EVENT TIMING — shuffle 7 evenly-spaced buckets so events
+//  fire throughout the game in a randomized order
+// ============================================================
+(function() {
+  const buckets = [3, 10, 17, 24, 31, 38, 44];
+  for (let i = buckets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [buckets[i], buckets[j]] = [buckets[j], buckets[i]];
+  }
+  const jitter = () => Math.floor(Math.random() * 4);
+  window._ET = {
+    tSwanHonk:  buckets[0] + jitter(),
+    tigerWoods: buckets[1] + jitter(),
+    hogGazin:   buckets[2] + jitter(),
+    billy:      buckets[3] + jitter(),
+    kramer:     buckets[4] + jitter(),
+    ryan:       buckets[5] + jitter(),
+    crockett:   buckets[6] + jitter(),
+  };
+})();
+
+// ============================================================
 //  GAME STATE
 // ============================================================
 const G = {
@@ -492,7 +514,13 @@ const G = {
   crockettSeen: false,
   tigerWoodsSeen: false,
   kramerSeen: false,
-  kramerTriggerAction: Math.random() < 0.75 ? Math.floor(Math.random() * 30) + 5 : -1,
+  kramerTriggerAction: window._ET.kramer,
+  tSwanHonkTriggerAction: window._ET.tSwanHonk,
+  tigerWoodsTriggerAction: window._ET.tigerWoods,
+  hogTriggerAction: window._ET.hogGazin,
+  billyTriggerAction: window._ET.billy,
+  ryanTriggerAction: window._ET.ryan,
+  crockettTriggerAction: window._ET.crockett,
   weeklyPrepGained: 0,
   phase: 'playing', // 'playing','won','lost'
   currentSong: YYT_SONGS[Math.floor(Math.random()*YYT_SONGS.length)],
@@ -712,8 +740,8 @@ function rollRandomEvent() {
   // Block random events while user is browsing listings
   if(typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action')) return;
 
-  // Hog Gazin': random chance each action — one-time 3-second catch window
-  if(!G.hogGazinSeen && !G.hogGazinActive && Math.random() < 0.06) {
+  // Hog Gazin': fires once trigger action is reached
+  if(!G.hogGazinSeen && !G.hogGazinActive && G.totalActionsTaken >= G.hogTriggerAction) {
     G.hogGazinActive = true;
     G.hogGazinSeen = true;
     printBlank();
@@ -746,8 +774,8 @@ function rollRandomEvent() {
     return;
   }
 
-  // Crazy Billy: once per game, ~8% chance per action
-  if(!G.billySeen && !G.billyActive && Math.random() < 0.08) {
+  // Crazy Billy: fires once trigger action is reached
+  if(!G.billySeen && !G.billyActive && G.totalActionsTaken >= G.billyTriggerAction) {
     G.billyActive = true;
     G.billySeen = true;
     printBlank();
@@ -780,8 +808,8 @@ function rollRandomEvent() {
     return;
   }
 
-  // Ryan: once per game, ~8% chance
-  if(!G.ryanSeen && !G.ryanActive && Math.random() < 0.08) {
+  // Ryan: fires once trigger action is reached
+  if(!G.ryanSeen && !G.ryanActive && G.totalActionsTaken >= G.ryanTriggerAction) {
     G.ryanSeen = true;
     G.ryanActive = true;
     G.ryanResistCount = 0;
@@ -792,8 +820,8 @@ function rollRandomEvent() {
     return;
   }
 
-  // Crockett: once per game
-  if(!G.crockettSeen && G.week >= 2 && G.week <= 4 && Math.random() < 0.20) {
+  // Crockett: fires once trigger action is reached
+  if(!G.crockettSeen && G.totalActionsTaken >= G.crockettTriggerAction) {
     G.crockettSeen = true;
     const shift = coin() ? 1 : -1;
     const oldWeek = G.week;
@@ -819,8 +847,8 @@ function rollRandomEvent() {
     return;
   }
 
-  // Tiger Woods car accident: once per game, ~7% chance
-  if(!G.tigerWoodsSeen && Math.random() < 0.07) {
+  // Tiger Woods car accident: fires once trigger action is reached
+  if(!G.tigerWoodsSeen && G.totalActionsTaken >= G.tigerWoodsTriggerAction) {
     G.tigerWoodsSeen = true;
     const pouredOut = rnd(1, 5);
     G.budLights = Math.max(0, G.budLights - pouredOut);
@@ -853,8 +881,8 @@ function rollRandomEvent() {
     G.pendingEvent = { type:'griffin', target: pick(neighbors) };
     return;
   }
-  // T-Swan car honking distraction — once per game
-  if(!G.carHonkSeen && r < 0.08) {
+  // T-Swan car honking distraction — fires once trigger action is reached
+  if(!G.carHonkSeen && G.totalActionsTaken >= G.tSwanHonkTriggerAction) {
     G.carHonkSeen = true;
     const carLines = [
       'Down the street, T-Swan\'s car is honking by itself. T-Swan is spraying it with a garden hose.',
