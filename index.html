@@ -250,6 +250,7 @@
   }
   .font-btn:hover { color: #00ff41; }
   .font-btn:disabled { color: #003300; cursor: default; }
+  .game-btn.btn-begin { border-color: #00ff41; color: #00ff41; font-size: 18px; width: 100%; animation: blink 0.7s step-end infinite; letter-spacing: 0.06em; padding: 16px; }
 
   /* ── Quick-action button panel ─────────────────────────── */
   #btn-panel {
@@ -353,7 +354,7 @@
   <div class="stat">📦 INVENTORY: <span id="s-inv">0</span> items</div>
 </div>
 
-<audio id="bg-music" src="90sChiptune.mp3" loop autoplay muted></audio>
+<audio id="bg-music" src="90sChiptune.mp3" loop></audio>
 <div id="music-bar">
   <span style="color:#004400">🎵</span>
   <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
@@ -496,6 +497,7 @@ const G = {
   billyActive: false,
   billySeen: false,
   lastCrockettAction: -10,
+  started: false,
 };
 
 // ============================================================
@@ -2399,6 +2401,11 @@ function renderButtons() {
   if (!panel) return;
   panel.innerHTML = '';
 
+  if (!G.started) {
+    addBtn(panel, '▶ BEGIN YOUR HUSTLE', 'begin', 'btn-begin');
+    return;
+  }
+
   if (G.phase === 'over') return;
 
   // Crazy Billy — flashing stop button (non-blocking)
@@ -2521,7 +2528,6 @@ function renderButtons() {
 //  INPUT HANDLER
 // ============================================================
 function processCommand(raw, displayOverride) {
-  startMusic();
   const input = raw.trim();
   if(!input) return;
 
@@ -2593,6 +2599,11 @@ function processCommand(raw, displayOverride) {
       cmdDeveloper(); break;
     case 'calm': case 'quiet': case 'griffin': case 'griff': case 'dog':
       cmdCalm(); break;
+    case 'begin':
+      G.started = true;
+      startMusic();
+      renderButtons();
+      break;
     case 'catch':
       cmdCatchHogGazin(); break;
     case 'stop-billy':
@@ -2639,10 +2650,9 @@ const bgMusic = document.getElementById('bg-music');
 bgMusic.volume = 0.4;
 let musicMuted = false;
 
-// Unmute as soon as possible — muted autoplay is allowed by browsers
 function startMusic() {
   bgMusic.muted = false;
-  if (bgMusic.paused) bgMusic.play().catch(() => {});
+  bgMusic.play().catch(() => {});
 }
 function toggleMute() {
   musicMuted = !musicMuted;
@@ -2676,9 +2686,6 @@ function adjustFont(dir) {
   document.getElementById('font-in').disabled  = fontStep >= 2;
 }
 
-// Unmute on first interaction (required by some browsers)
-document.addEventListener('click', startMusic, { once: true });
-document.addEventListener('keydown', startMusic, { once: true });
 
 
 const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','stop-billy','help-kramer','ignore-kramer'];
