@@ -313,6 +313,7 @@
   .game-btn.btn-upgrade:hover { box-shadow: 0 0 10px rgba(255,68,255,0.4); }
   .game-btn.btn-hoggazin  { border-color: #ff0055; color: #ff0055; animation: blink 0.22s step-end infinite; font-weight: bold; }
   .game-btn.btn-billy     { border-color: #ffaa00; color: #ffaa00; animation: blink 0.22s step-end infinite; font-weight: bold; }
+  .game-btn.btn-ryan      { border-color: #ff44ff; color: #ff44ff; animation: blink 0.3s step-end infinite; font-weight: bold; width: 100%; font-size: 16px; padding: 12px; }
   .game-btn.btn-amish     { border-color: #88cc55; color: #88cc55; }
   @media (max-width: 768px) {
     /* Status bar: 3-column grid so stats don't stack 4 rows deep */
@@ -502,6 +503,9 @@ const G = {
   hogGazinSeen: false,
   billyActive: false,
   billySeen: false,
+  ryanSeen: false,
+  ryanActive: false,
+  ryanResistCount: 0,
   lastCrockettAction: -10,
   started: false,
 };
@@ -670,6 +674,7 @@ function afterAction() {
     if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
     else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
     else if(G.pendingEvent.type === 'kramer') triggerKramerEvent();
+    else if(G.pendingEvent.type === 'ryan') triggerRyanEvent();
     else triggerRallyEvent();
   }
 
@@ -771,6 +776,18 @@ function rollRandomEvent() {
         }, 1000);
       }
     }, 1000);
+    return;
+  }
+
+  // Ryan: once per game, ~8% chance
+  if(!G.ryanSeen && !G.ryanActive && Math.random() < 0.08) {
+    G.ryanSeen = true;
+    G.ryanActive = true;
+    G.ryanResistCount = 0;
+    const gear = Math.random() < 0.5 ? 'golf' : 'ski';
+    const gearName = gear === 'golf' ? '⛳ Golf Package (clubs, bag, cart, lessons)' : '⛷️ Ski Package (gear, lift tickets, lodging)';
+    const cost = Math.floor(G.money * (0.30 + Math.random() * 0.20));
+    G.pendingEvent = { type:'ryan', gear: gearName, cost };
     return;
   }
 
@@ -903,6 +920,7 @@ function rollRandomEvent() {
 // ============================================================
 //  GRIFFIN EVENT
 // ============================================================
+let griffinAutoIgnoreTimeout = null;
 function triggerGriffinEvent() {
   const e = G.pendingEvent;
   printBlank();
@@ -916,6 +934,18 @@ function triggerGriffinEvent() {
     print('   (Results may vary. They will vary. Downward.)', 'dim');
     out.scrollTop = out.scrollHeight;
   }, 1200);
+  if (griffinAutoIgnoreTimeout) clearTimeout(griffinAutoIgnoreTimeout);
+  griffinAutoIgnoreTimeout = setTimeout(() => {
+    if (G.pendingEvent && G.pendingEvent.type === 'griffin') {
+      G.pendingEvent = null;
+      G.biteMeter = Math.min(100, G.biteMeter + 15);
+      printBlank();
+      print('  🐕 Griffin kept going. Matt ignored it. Bite risk crept up.', 'griffin');
+      print(`  🐕 Bite risk: ${G.biteMeter}%`, G.biteMeter >= 40 ? 'error' : 'event');
+      out.scrollTop = out.scrollHeight;
+      renderButtons();
+    }
+  }, 5000);
 }
 
 // ============================================================
@@ -1094,6 +1124,71 @@ function cmdIgnoreKramer() {
     afterAction();
     renderButtons();
   }, 1200);
+}
+
+// ============================================================
+//  RYAN EVENT
+// ============================================================
+let ryanResistTimeout = null;
+
+function triggerRyanEvent() {
+  const e = G.pendingEvent;
+  printBlank();
+  print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
+  print('🎿  RYAN IS IN THE DRIVEWAY', 'special');
+  print(`🎿  He has an INCREDIBLE deal on a ${e.gear}.`, 'special');
+  print(`🎿  "Bro I'm practically GIVING this away. ${money(e.cost)} bucks. That's NOTHING."`, 'special');
+  print('🎿  It IS a great deal. You don\'t need it. But it\'s a GREAT deal.', 'dim');
+  print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
+  setTimeout(() => {
+    print('   <strong>resist-ryan</strong> 10x in 4 seconds to send him away.', 'choice');
+    out.scrollTop = out.scrollHeight;
+    renderButtons();
+    if (ryanResistTimeout) clearTimeout(ryanResistTimeout);
+    ryanResistTimeout = setTimeout(() => {
+      if (G.pendingEvent && G.pendingEvent.type === 'ryan') {
+        cmdCaveRyan();
+      }
+    }, 4000);
+  }, 1200);
+}
+
+function cmdResistRyan() {
+  if (!G.pendingEvent || G.pendingEvent.type !== 'ryan') return;
+  G.ryanResistCount++;
+  renderButtons();
+  if (G.ryanResistCount >= 10) {
+    if (ryanResistTimeout) { clearTimeout(ryanResistTimeout); ryanResistTimeout = null; }
+    G.pendingEvent = null;
+    G.ryanActive = false;
+    printBlank();
+    print('  💪 Ryan\'s face falls. "Bro. I thought we were friends."', 'dim');
+    print('  He gets back in his truck. Slowly. Dramatically.', 'dim');
+    print('  The deal dies. Your money lives.', 'money');
+    printBlank();
+    out.scrollTop = out.scrollHeight;
+    afterAction();
+    renderButtons();
+  }
+}
+
+function cmdCaveRyan() {
+  if (!G.pendingEvent || G.pendingEvent.type !== 'ryan') return;
+  if (ryanResistTimeout) { clearTimeout(ryanResistTimeout); ryanResistTimeout = null; }
+  const e = G.pendingEvent;
+  G.pendingEvent = null;
+  G.ryanActive = false;
+  const cost = Math.min(G.money, e.cost);
+  G.money -= cost;
+  printBlank();
+  print(`  💸 You caved. $${money(cost)} handed to Ryan.`, 'error');
+  print(`  ${e.gear} is now in the garage.`, 'dim');
+  print('  It looks great. You\'ll never use it.', 'dim');
+  printBlank();
+  out.scrollTop = out.scrollHeight;
+  updateStatus();
+  afterAction();
+  renderButtons();
 }
 
 // ============================================================
@@ -1650,6 +1745,7 @@ function cmdIgnoreGriffin() {
 }
 
 function cmdCalm() {
+  if (griffinAutoIgnoreTimeout) { clearTimeout(griffinAutoIgnoreTimeout); griffinAutoIgnoreTimeout = null; }
   if(!G.pendingEvent || G.pendingEvent.type !== 'griffin') {
     print('Griffin isn\'t currently melting down. Give him a minute.', 'dim');
     return;
@@ -2439,6 +2535,9 @@ function renderButtons() {
       });
     } else if (e.type === 'rally') {
       addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
+    } else if (e.type === 'ryan') {
+      const remaining = 10 - G.ryanResistCount;
+      addBtn(panel, `💪 RESIST THE TEMPTATION (${remaining} left)`, 'resist-ryan', 'btn-ryan');
     } else if (e.type === 'kramer') {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:8px;width:100%';
@@ -2614,6 +2713,8 @@ function processCommand(raw, displayOverride) {
       cmdCatchHogGazin(); break;
     case 'stop-billy':
       cmdStopBilly(); break;
+    case 'resist-ryan':
+      cmdResistRyan(); break;
     case 'help-kramer':
       cmdHelpKramer(); break;
     case 'ignore-kramer':
@@ -2710,7 +2811,7 @@ function adjustFont(dir) {
 
 
 
-const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','stop-billy','help-kramer','ignore-kramer'];
+const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','stop-billy','resist-ryan','help-kramer','ignore-kramer'];
 
 const inputEl = document.getElementById('cmd-input');
 inputEl.addEventListener('keydown', function(e) {
