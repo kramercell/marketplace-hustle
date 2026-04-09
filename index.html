@@ -87,6 +87,8 @@
   .line.beer    { color: #ffcc00; }
   .line.choice  { color: #00ffff; }
   .line.mobile-only { display: none; }
+  .title-card { text-align: center; padding: 4px 0; }
+  .title-card img { max-width: 480px; width: 100%; display: block; margin: 0 auto; }
 
   #input-area {
     border-top: 1px solid #003300;
@@ -347,14 +349,8 @@
     /* Mobile-only output lines */
     .line.mobile-only { display: block; }
 
-    /* Big two-line title on mobile */
-    .line.title.mobile-only {
-      font-size: 52px;
-      text-align: center;
-      line-height: 1.05;
-      letter-spacing: 2px;
-      text-shadow: 0 0 24px rgba(0,255,65,0.5);
-    }
+    /* Title card image: full width on mobile */
+    .title-card img { max-width: 100%; }
 
     /* Buttons: bigger tap targets, panel capped so it doesn't eat the screen */
     .game-btn { font-size: 15px; padding: 11px 16px; }
@@ -2951,22 +2947,9 @@ inputEl.addEventListener('keydown', function(e) {
 //  INTRO SEQUENCE
 // ============================================================
 function intro() {
-  print(`<pre class="ascii-art">
-  ███╗   ███╗ █████╗ ██████╗ ██╗  ██╗███████╗████████╗██████╗ ██╗      █████╗  ██████╗ ███████╗
-  ████╗ ████║██╔══██╗██╔══██╗██║ ██╔╝██╔════╝╚══██╔══╝██╔══██╗██║     ██╔══██╗██╔════╝ ██╔════╝
-  ██╔████╔██║███████║██████╔╝█████╔╝ █████╗     ██║   ██████╔╝██║     ███████║██║      █████╗
-  ██║╚██╔╝██║██╔══██║██╔══██╗██╔═██╗ ██╔══╝     ██║   ██╔═══╝ ██║     ██╔══██║██║      ██╔══╝
-  ██║ ╚═╝ ██║██║  ██║██║  ██║██║  ██╗███████╗   ██║   ██║     ███████╗██║  ██║╚██████╗ ███████╗
-  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-  ██╗  ██╗██╗   ██╗███████╗████████╗██╗     ███████╗
-  ██║  ██║██║   ██║██╔════╝╚══██╔══╝██║     ██╔════╝
-  ███████║██║   ██║███████╗   ██║   ██║     █████╗
-  ██╔══██║██║   ██║╚════██║   ██║   ██║     ██╔══╝
-  ██║  ██║╚██████╔╝███████║   ██║   ███████╗███████╗
-  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚══════╝</pre>`, '');
+  print('<img src="TitleCard.png" alt="Marketplace Hustle">', 'title-card');
   printBlank();
   print('  ════════════════════════════════════════════════════', 'dim');
-  print('MARKETPLACE HUSTLE', 'title mobile-only');
   print('              A FACEBOOK MARKETPLACE FLIPPING SIM', 'title');
   print('               ft. MATT · GRIFFIN &amp;', 'title');
   print('                ✦ THE YING YANG TWINS ✦', 'special');
