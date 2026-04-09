@@ -299,7 +299,8 @@
   .game-btn.btn-beer      { border-color: #ffcc00; color: #ffcc00; }
   .game-btn.btn-beer:hover { box-shadow: 0 0 8px rgba(255,204,0,0.35); }
   .game-btn.btn-back      { border-color: #444;    color: #555;    font-size: 12px; }
-  .game-btn.btn-listing   { border-color: #009900; color: #00bb22; text-align: left; }
+  .game-btn.btn-listing   { border-color: #009900; color: #00bb22; text-align: left; line-height: 1.4; }
+  .game-btn.btn-listing .est { color: #004d00; font-size: 0.85em; }
   .game-btn.btn-listing:hover { box-shadow: 0 0 6px rgba(0,187,34,0.3); }
   .game-btn.btn-buy       { border-color: #00ffaa; color: #00ffaa; }
   .game-btn.btn-buy:hover  { box-shadow: 0 0 8px rgba(0,255,170,0.35); }
@@ -2485,7 +2486,9 @@ function renderButtons() {
   if (btnCtx.mode === 'listings' && G.listings.length > 0) {
     G.listings.forEach((item, i) => {
       if (G.money < Math.round(item.askPrice * 0.40)) return;
-      addBtn(panel, `[${i+1}] ${item.emoji} ${item.name}  $${money(item.askPrice)}`, null, 'btn-listing', () => {
+      const estProfit = Math.round((item.sellMin + item.sellMax) / 2 - item.askPrice);
+      const profitStr = estProfit > 0 ? `+$${money(estProfit)}` : `-$${money(Math.abs(estProfit))}`;
+      addBtn(panel, `[${i+1}] ${item.emoji} ${item.name}<br><span class="est">Ask $${money(item.askPrice)} · est. profit ${profitStr}</span>`, null, 'btn-listing', () => {
         btnCtx.mode = 'listing-action';
         btnCtx.selectedListing = i;
         renderButtons();
