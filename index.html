@@ -2732,6 +2732,7 @@ function processCommand(raw, displayOverride) {
       cmdCalm(); break;
     case 'begin':
       G.started = true;
+      stopIntroScroll();
       startMusic();
       renderButtons();
       break;
@@ -2926,6 +2927,30 @@ function intro() {
 
 adjustFont(1);
 intro();
+
+// Intro auto-scroll: slowly drift down from top, stop when user touches
+let introScrolling = true;
+let introScrollInterval = null;
+
+function stopIntroScroll() {
+  if (introScrolling) {
+    introScrolling = false;
+    if (introScrollInterval) { clearInterval(introScrollInterval); introScrollInterval = null; }
+    out.removeEventListener('touchstart', stopIntroScroll);
+    out.removeEventListener('wheel', stopIntroScroll);
+    out.removeEventListener('mousedown', stopIntroScroll);
+  }
+}
+
+out.scrollTop = 0;
+introScrollInterval = setInterval(() => {
+  if (!introScrolling) return;
+  out.scrollTop += 1;
+}, 30);
+
+out.addEventListener('touchstart', stopIntroScroll, { passive: true });
+out.addEventListener('wheel', stopIntroScroll, { passive: true });
+out.addEventListener('mousedown', stopIntroScroll);
 
 </script>
 </body>
