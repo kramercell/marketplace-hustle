@@ -2521,6 +2521,7 @@ function renderButtons() {
 //  INPUT HANDLER
 // ============================================================
 function processCommand(raw, displayOverride) {
+  startMusic();
   const input = raw.trim();
   if(!input) return;
 
@@ -2639,6 +2640,7 @@ bgMusic.volume = 0.4;
 let musicMuted = false;
 
 function startMusic() {
+  if (!bgMusic.paused) return;
   bgMusic.play().catch(() => {});
 }
 function toggleMute() {
