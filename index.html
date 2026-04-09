@@ -2661,14 +2661,22 @@ function startMusic() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && G.started && !musicMuted) {
-    bgMusic.play().catch(() => {});
+  if (document.visibilityState === 'hidden' && G.started) {
+    musicMuted = true;
+    bgMusic.pause();
+    document.getElementById('mute-btn').textContent = '🔇';
   }
 });
 function toggleMute() {
   musicMuted = !musicMuted;
-  bgMusic.muted = musicMuted;
-  document.getElementById('mute-btn').textContent = musicMuted ? '🔇' : '🔊';
+  if (musicMuted) {
+    bgMusic.pause();
+    document.getElementById('mute-btn').textContent = '🔇';
+  } else {
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(() => {});
+    document.getElementById('mute-btn').textContent = '🔊';
+  }
 }
 function setVolume(val) {
   bgMusic.volume = val;
