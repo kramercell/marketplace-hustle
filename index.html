@@ -147,7 +147,7 @@
     82%  { filter: hue-rotate(15deg) saturate(1.2); }
     100% { filter: none; }
   }
-  body.drunk-mode { animation: drunkNeighbor 3.5s ease-out forwards; }
+  .drunk-line { animation: drunkNeighbor 3.5s ease-out forwards; }
 
   @keyframes buzzSway {
     0%   { transform: rotate(0deg) skewX(0deg); }
@@ -845,20 +845,20 @@ function rollRandomEvent() {
     G.week = Math.max(1, Math.min(G.totalWeeks, G.week + shift));
     G.actionsTaken = 0; // reset so auto-advance doesn't also fire this same tick
     G.weeklyPrepGained = 0;
-    drunkFlash();
     printBlank();
-    print('☮️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
-    print('☮️  A muscular wizard wearing a tie-dye cloak walks over from across the street', 'special');
-    print('☮️  "Hey Matt... I got that good good!"', 'special');
-    print('☮️  A cloud of smoke engulfs Iris Drive. Strange but familiar smell. Things become... chill...', 'special');
-    print('☮️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
+    print('☮️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special crockett-line');
+    print('☮️  A muscular wizard wearing a tie-dye cloak walks over from across the street', 'special crockett-line');
+    print('☮️  "Hey Matt... I got that good good!"', 'special crockett-line');
+    print('☮️  A cloud of smoke engulfs Iris Drive. Strange but familiar smell. Things become... chill...', 'special crockett-line');
+    print('☮️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special crockett-line');
+    drunkFlash();
     setTimeout(() => {
       printBlank();
-      print(`☮️  Matt emerges from the cloud to learn he has time traveled one week into the ${shift > 0 ? 'future' : 'past'}.`, 'special');
-      print(`☮️  Week ${oldWeek} → Week ${G.week}.`, 'special');
-      print('☮️  Matt: "I ain\'t shook."', 'special');
-      print('☮️  Slides stay on. The cloud clears. The hustle continues.', 'special');
-      out.scrollTop = out.scrollHeight;
+      print(`☮️  Matt emerges from the cloud to learn he has time traveled one week into the ${shift > 0 ? 'future' : 'past'}.`, 'special crockett-line');
+      print(`☮️  Week ${oldWeek} → Week ${G.week}.`, 'special crockett-line');
+      print('☮️  Matt: "I ain\'t shook."', 'special crockett-line');
+      print('☮️  Slides stay on. The cloud clears. The hustle continues.', 'special crockett-line');
+      drunkFlash();
       updateStatus();
     }, 1900);
     return;
@@ -996,10 +996,14 @@ function triggerGriffinEvent() {
 //  BOAT RALLY EVENT
 // ============================================================
 function drunkFlash() {
-  document.body.classList.remove('drunk-mode');
-  void document.body.offsetWidth; // force reflow to restart animation
-  document.body.classList.add('drunk-mode');
-  setTimeout(() => document.body.classList.remove('drunk-mode'), 3500);
+  // Applied after Crockett lines are printed — animate only those lines
+  const lines = Array.from(out.querySelectorAll('.crockett-line'));
+  lines.forEach(el => {
+    el.classList.remove('drunk-line');
+    void el.offsetWidth; // force reflow to restart
+    el.classList.add('drunk-line');
+  });
+  setTimeout(() => lines.forEach(el => el.classList.remove('drunk-line')), 3500);
 }
 
 let buzzActive = false;
