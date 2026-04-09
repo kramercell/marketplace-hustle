@@ -726,7 +726,7 @@ function afterAction() {
     printBlank();
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
     print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'dim');
-    setTimeout(() => cmdNext(), 900);
+    autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 900);
   }
 }
 
@@ -1193,6 +1193,7 @@ function cmdIgnoreKramer() {
 //  RYAN EVENT
 // ============================================================
 let ryanResistTimeout = null;
+let autoAdvanceTimer = null;
 
 function triggerRyanEvent() {
   const e = G.pendingEvent;
@@ -1671,6 +1672,8 @@ function cmdRestock() {
   print('  🍺 30-pack acquired from Costco. Kirkland brand naturally.', 'beer');
   print('  Cost: $25 | +12 Bud Lights. The garage fridge is restocked.', 'beer');
   updateStatus();
+  afterAction();
+  renderButtons();
 }
 
 function cmdUpgrade() {
@@ -1690,6 +1693,8 @@ function cmdUpgrade() {
   print('  to a Limited Collector\'s Edition Magnetic Closure model.', 'special');
   print('  Yeti\'s legal team may have questions. Matt does not.', 'dim');
   print(`  New sell value: $${money(item.sellMin)}–$${money(item.sellMax)}`, 'money');
+  afterAction();
+  renderButtons();
 }
 
 function startGameOverScroll(fromY, headerIdx) {
@@ -2016,6 +2021,7 @@ function cmdRally() {
 }
 
 function cmdNext() {
+  if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
   // Check for unresolved events
   if(G.pendingEvent) {
     if(G.pendingEvent.type === 'griffin') {
@@ -2512,7 +2518,6 @@ function amishRobbery(item, listingIdx) {
       renderButtons();
     }, 1200);
   } else {
-    G.energy = Math.min(G.energy, 20);
     print('  The buggy rolled off. No haste. No regrets.', 'dim');
     print(`  💸 Lost: $${money(actualStolen)} | Cash: $${money(G.money)}`, 'error');
     print('  You don\'t have the energy to make them pay for this.', 'dim');
