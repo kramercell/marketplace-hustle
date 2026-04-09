@@ -189,38 +189,53 @@
     vertical-align: middle;
   }
 
-  #yt-dock {
-    position: fixed;
-    top: 44px;
-    right: 10px;
-    z-index: 500;
-    border: 1px solid #00ff41;
-    background: #000;
-    box-shadow: 0 0 8px rgba(0,255,65,0.3);
-  }
-  @media (max-width: 768px) {
-    #yt-dock {
-      position: static;
-      border-left: none;
-      border-right: none;
-      border-top: none;
-      box-shadow: none;
-    }
-  }
-  #yt-label {
-    font-family: 'VT323', monospace;
-    font-size: 16px;
-    color: #00ff41;
-    padding: 3px 8px;
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
-    flex: 1;
-  }
-  #yt-label:hover { background: #001a00; }
-  #yt-header {
+  #music-bar {
+    background: #001a00;
+    border-bottom: 1px solid #003300;
+    padding: 4px 10px;
     display: flex;
     align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: #006600;
+  }
+  #mute-btn {
+    background: transparent;
+    border: none;
+    color: #006600;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 4px;
+    user-select: none;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  #mute-btn:hover { color: #00ff41; }
+  #vol-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80px;
+    height: 3px;
+    background: #004400;
+    outline: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #00aa22;
+    cursor: pointer;
+  }
+  #vol-slider::-moz-range-thumb {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #00aa22;
+    border: none;
+    cursor: pointer;
   }
   .font-btn {
     font-family: 'VT323', monospace;
@@ -235,9 +250,6 @@
   }
   .font-btn:hover { color: #00ff41; }
   .font-btn:disabled { color: #003300; cursor: default; }
-  #yt-frame { display: block; }
-  #yt-dock.collapsed #yt-frame { height: 0; }
-  #yt-dock.collapsed { border-bottom: none; }
 
   /* ── Quick-action button panel ─────────────────────────── */
   #btn-panel {
@@ -341,15 +353,13 @@
   <div class="stat">📦 INVENTORY: <span id="s-inv">0</span> items</div>
 </div>
 
-<div id="yt-dock" class="collapsed">
-  <div id="yt-header">
-    <div id="yt-label" onclick="toggleYT()">🎵 SOUNDTRACK ▶</div>
-    <button class="font-btn" id="font-out" onclick="adjustFont(-1)" title="Smaller text">🔍−</button>
-    <button class="font-btn" id="font-in"  onclick="adjustFont(1)"  title="Larger text">🔍+</button>
-  </div>
-  <iframe id="yt-frame" width="220" height="124" frameborder="0"
-    allow="autoplay; encrypted-media; fullscreen"
-    allowfullscreen></iframe>
+<audio id="bg-music" src="90sChiptune.mp3" loop></audio>
+<div id="music-bar">
+  <span style="color:#004400">🎵</span>
+  <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
+  <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.4" oninput="setVolume(this.value)">
+  <button class="font-btn" id="font-out" onclick="adjustFont(-1)" title="Smaller text">🔍−</button>
+  <button class="font-btn" id="font-in"  onclick="adjustFont(1)"  title="Larger text">🔍+</button>
 </div>
 
 <div id="output"></div>
@@ -2623,25 +2633,28 @@ function processCommand(raw, displayOverride) {
   renderButtons();
 }
 
-// ── YouTube soundtrack ──────────────────────────────────────
-let ytLoaded = false;
-function loadYT() {
-  if(ytLoaded) return;
-  ytLoaded = true;
-  document.getElementById('yt-frame').src =
-    'https://www.youtube.com/embed/bls9j98gFRw?autoplay=1&rel=0';
+// ── Background music ────────────────────────────────────────
+const bgMusic = document.getElementById('bg-music');
+bgMusic.volume = 0.4;
+let musicMuted = false;
+
+function startMusic() {
+  bgMusic.play().catch(() => {});
 }
-function toggleYT() {
-  const dock = document.getElementById('yt-dock');
-  if(!ytLoaded) {
-    loadYT();
-    dock.classList.remove('collapsed');
-    document.getElementById('yt-label').textContent = '🎵 SOUNDTRACK ▼';
-    return;
+function toggleMute() {
+  musicMuted = !musicMuted;
+  bgMusic.muted = musicMuted;
+  document.getElementById('mute-btn').textContent = musicMuted ? '🔇' : '🔊';
+}
+function setVolume(val) {
+  bgMusic.volume = val;
+  if(val == 0) {
+    musicMuted = true; bgMusic.muted = true;
+    document.getElementById('mute-btn').textContent = '🔇';
+  } else if(musicMuted) {
+    musicMuted = false; bgMusic.muted = false;
+    document.getElementById('mute-btn').textContent = '🔊';
   }
-  const collapsed = dock.classList.toggle('collapsed');
-  document.getElementById('yt-label').textContent =
-    collapsed ? '🎵 SOUNDTRACK ▶' : '🎵 SOUNDTRACK ▼';
 }
 let fontStep = 0; // -1, 0, +1, or +2
 const BASE_FONT_DESKTOP = 20;
@@ -2660,9 +2673,9 @@ function adjustFont(dir) {
   document.getElementById('font-in').disabled  = fontStep >= 2;
 }
 
-// Try autoplay immediately; fall back to first button click
-loadYT();
-document.addEventListener('click', loadYT, { once: true });
+// Try autoplay; fall back to first user interaction
+startMusic();
+document.addEventListener('click', startMusic, { once: true });
 
 
 const COMMANDS = ['browse','buy','sell','negotiate','lowball','recharge','drink','restock','calm','deal','upgrade','prep','rally','status','next','inventory','help','answer','truelime','scoot','developer','catch','stop-billy','help-kramer','ignore-kramer'];
