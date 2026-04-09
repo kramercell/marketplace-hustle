@@ -159,7 +159,6 @@
   }
   body.buzz-mode #output { animation: buzzSway 3s ease-out forwards; }
   body.buzz-mode #output .line { letter-spacing: 0.03em; }
-  body.buzz-mode #status-bar { filter: hue-rotate(120deg) saturate(2); transition: filter 3s ease-out; }
 
   @keyframes flashDanger {
     0%,100% { opacity: 1; }
@@ -2852,17 +2851,22 @@ function processCommand(raw, displayOverride) {
   }
 
   // Update button context based on what command ran
+  // Don't touch scroll if game just ended — startGameOverScroll handles it
   const _browseAliases = ['browse','scroll','b','marketplace','fb','search'];
   const _buyAliases    = ['buy','purchase','get','negotiate','counter','offer','lowball','lb','lowbll'];
-  if (_browseAliases.includes(cmd)) {
-    btnCtx = { mode: 'listings', selectedListing: null };
-    out.scrollTop = out.scrollHeight;
-  } else if (_buyAliases.includes(cmd)) {
-    btnCtx = { mode: G.listings.length > 0 ? 'listings' : 'default', selectedListing: null };
-    out.scrollTop = scrollAnchor;
+  if (G.phase !== 'over') {
+    if (_browseAliases.includes(cmd)) {
+      btnCtx = { mode: 'listings', selectedListing: null };
+      out.scrollTop = out.scrollHeight;
+    } else if (_buyAliases.includes(cmd)) {
+      btnCtx = { mode: G.listings.length > 0 ? 'listings' : 'default', selectedListing: null };
+      out.scrollTop = scrollAnchor;
+    } else {
+      btnCtx = { mode: 'default', selectedListing: null };
+      out.scrollTop = scrollAnchor;
+    }
   } else {
     btnCtx = { mode: 'default', selectedListing: null };
-    out.scrollTop = scrollAnchor;
   }
   renderButtons();
 }
