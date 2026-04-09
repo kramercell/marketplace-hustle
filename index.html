@@ -340,7 +340,7 @@
     #output {
       overflow-x: hidden;
       padding: 8px 10px;
-      font-size: 16px;
+      font-size: 17px;
     }
 
     /* ASCII title art is unreadable at phone width — hide it */
@@ -353,7 +353,7 @@
     .title-card img { max-width: 100%; }
 
     /* Buttons: bigger tap targets, panel capped so it doesn't eat the screen */
-    .game-btn { font-size: 15px; padding: 11px 16px; }
+    .game-btn { font-size: 16px; padding: 13px 18px; }
     #btn-panel {
       padding: 8px;
       gap: 8px;
@@ -724,9 +724,9 @@ function afterAction() {
   // Auto-advance week after maxActionsPerWeek actions with no blocking event
   if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing') {
     printBlank();
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
-    print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'dim');
-    autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 900);
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+    print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
+    autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 1800);
   }
 }
 
@@ -762,10 +762,11 @@ function rollRandomEvent() {
     printBlank();
     print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
     print('👀  HOG GAZIN\' ALERT!!!', 'event');
+    print('👀  ⚠️  TAP CATCH — 4 SECONDS BEFORE THEY GET AWAY!', 'event');
     print('👀  Someone just walked by and is STARING at the garage.', 'event');
     print('👀  Real suspicious-like. Eyes all big. Hog gazin\' at Matt\'s motorcycle.', 'event');
-    print('👀  ⚠️  CATCH THEM — 2 SECONDS BEFORE THEY GET AWAY!', 'event');
     print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    out.scrollTop = out.scrollHeight;
     renderButtons();
     hogGazinTimeout = setTimeout(() => {
       if (G.hogGazinActive) {
@@ -785,7 +786,7 @@ function rollRandomEvent() {
           out.scrollTop = out.scrollHeight;
         }, 1200);
       }
-    }, 2000);
+    }, 4000);
     return;
   }
 
@@ -796,10 +797,11 @@ function rollRandomEvent() {
     printBlank();
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
     print('🚛  CRAZY BILLY ALERT!!!', 'event');
+    print('🚛  ⚠️  TAP STOP BILLY — 2 SECONDS BEFORE IT\'S TOO LATE!', 'event');
     print('🚛  A rattling truck just pulled into the driveway at 2am.', 'event');
-    print('🚛  It\'s Crazy Billy. He\'s started landscaping your yard!.', 'event');
-    print('🚛  ⚠️  STOP HIM — 1 SECOND BEFORE IT\'S TOO LATE!', 'event');
+    print('🚛  It\'s Crazy Billy. He\'s started landscaping your yard!', 'event');
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    out.scrollTop = out.scrollHeight;
     renderButtons();
     billyTimeout = setTimeout(() => {
       if (G.billyActive) {
@@ -819,7 +821,7 @@ function rollRandomEvent() {
           out.scrollTop = out.scrollHeight;
         }, 1000);
       }
-    }, 1000);
+    }, 2500);
     return;
   }
 
@@ -970,15 +972,12 @@ function triggerGriffinEvent() {
   const e = G.pendingEvent;
   printBlank();
   print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
-  print(`🐕  GRIFFIN ALERT: Griffin is GOING ABSOLUTELY INSANE`, 'griffin');
-  print(`🐕  at ${e.target}.`, 'griffin');
+  print(`🐕  GRIFFIN ALERT — tap CALM now!`, 'griffin');
+  print(`🐕  Griffin is GOING ABSOLUTELY INSANE at ${e.target}.`, 'griffin');
   print(`🐕  The whole neighborhood can hear this.`, 'griffin');
   print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
-  setTimeout(() => {
-    print('   Select <strong>calm</strong> to attempt to calm Griffin down.', 'choice');
-    print('   (Results may vary. They will vary. Downward.)', 'dim');
-    out.scrollTop = out.scrollHeight;
-  }, 1200);
+  print('   Select <strong>calm</strong> to settle him. (Results may vary.)', 'choice');
+  out.scrollTop = out.scrollHeight;
   if (griffinAutoIgnoreTimeout) clearTimeout(griffinAutoIgnoreTimeout);
   griffinAutoIgnoreTimeout = setTimeout(() => {
     if (G.pendingEvent && G.pendingEvent.type === 'griffin') {
@@ -1118,11 +1117,9 @@ function triggerKramerEvent() {
   print('⛵  He\'s waving his swim suit at passing boats. None have stopped.', 'event');
   print('⛵  He just called Matt.', 'event');
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
-  setTimeout(() => {
-    print('   <strong>help-kramer</strong> (-40 energy) | <strong>ignore-kramer</strong> (+40 energy)', 'choice');
-    print('   ⚠️  5 seconds before Matt stops answering his phone.', 'dim');
-    out.scrollTop = out.scrollHeight;
-  }, 1200);
+  print('   <strong>help-kramer</strong> (-40 energy) | <strong>ignore-kramer</strong> (+40 energy)', 'choice');
+  print('   ⚠️  5 seconds before Matt stops answering his phone.', 'choice');
+  out.scrollTop = out.scrollHeight;
   if (kramerAutoTimeout) clearTimeout(kramerAutoTimeout);
   kramerAutoTimeout = setTimeout(() => {
     if (G.pendingEvent && G.pendingEvent.type === 'kramer') {
@@ -1204,17 +1201,15 @@ function triggerRyanEvent() {
   print(`🎿  "Bro it's basically free at this price. Only ${money(e.cost)}. Boyne charges WAY more."`, 'special');
   print('🎿  It IS a great deal. You don\'t need it. But it\'s a GREAT deal.', 'dim');
   print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
-  setTimeout(() => {
-    print('   <strong>resist-ryan</strong> 10x in 7 seconds to send him away.', 'choice');
-    out.scrollTop = out.scrollHeight;
-    renderButtons();
-    if (ryanResistTimeout) clearTimeout(ryanResistTimeout);
-    ryanResistTimeout = setTimeout(() => {
-      if (G.pendingEvent && G.pendingEvent.type === 'ryan') {
-        cmdCaveRyan();
-      }
-    }, 7000);
-  }, 1200);
+  print('   <strong>resist-ryan</strong> 10x in 7 seconds to send him away.', 'choice');
+  out.scrollTop = out.scrollHeight;
+  renderButtons();
+  if (ryanResistTimeout) clearTimeout(ryanResistTimeout);
+  ryanResistTimeout = setTimeout(() => {
+    if (G.pendingEvent && G.pendingEvent.type === 'ryan') {
+      cmdCaveRyan();
+    }
+  }, 7000);
 }
 
 function cmdResistRyan() {
@@ -2065,8 +2060,8 @@ function cmdNext() {
   if(coin(0.35)) G.budLights = Math.max(0, G.budLights - 1);
 
   printBlank();
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
-  print(`  💤 Week ${G.week-1} in the books. Matt collapses on the couch.`, 'dim');
+  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+  print(`  💤 Week ${G.week-1} in the books. Matt collapses on the couch.`, 'system');
   const wakeLines = [
     'Griffin barks at 6am Monday. The grind resumes.',
     'Matt wakes up to 11 new Facebook Marketplace messages. Classic.',
