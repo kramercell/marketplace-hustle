@@ -2488,7 +2488,7 @@ function renderButtons() {
       if (G.money < Math.round(item.askPrice * 0.40)) return;
       const estProfit = Math.round((item.sellMin + item.sellMax) / 2 - item.askPrice);
       const profitStr = estProfit > 0 ? `+$${money(estProfit)}` : `-$${money(Math.abs(estProfit))}`;
-      addBtn(panel, `[${i+1}] ${item.emoji} ${item.name}<br><span class="est">Ask $${money(item.askPrice)} · est. profit ${profitStr}</span>`, null, 'btn-listing', () => {
+      addBtn(panel, `[${i+1}] ${item.emoji} ${item.name}  <span class="est">$${money(item.askPrice)} · est. ${profitStr}</span>`, null, 'btn-listing', () => {
         btnCtx.mode = 'listing-action';
         btnCtx.selectedListing = i;
         renderButtons();
