@@ -1638,8 +1638,7 @@ function cmdDrink() {
   if(coin(0.5)) {
     const limeBonus = rnd(8, 15);
     G.energy = Math.min(100, G.energy + limeBonus);
-    print('  🟢 Wait — there\'s a True Lime packet here. Matt pours it in.', 'special');
-    print(`  True Lime bonus: +${limeBonus} energy.`, 'special');
+    print(`  🟢 True Lime bonus: +${limeBonus} energy.`, 'special');
   }
   if(G.budLights <= 2) print('  ⚠️  Running low. Select <strong>restock</strong>.', 'event');
   updateStatus();
