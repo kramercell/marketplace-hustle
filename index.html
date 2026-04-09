@@ -2642,12 +2642,14 @@ function processCommand(raw, displayOverride) {
   const _buyAliases    = ['buy','purchase','get','negotiate','counter','offer','lowball','lb','lowbll'];
   if (_browseAliases.includes(cmd)) {
     btnCtx = { mode: 'listings', selectedListing: null };
+    out.scrollTop = out.scrollHeight;
   } else if (_buyAliases.includes(cmd)) {
     btnCtx = { mode: G.listings.length > 0 ? 'listings' : 'default', selectedListing: null };
+    out.scrollTop = scrollAnchor;
   } else {
     btnCtx = { mode: 'default', selectedListing: null };
+    out.scrollTop = scrollAnchor;
   }
-  out.scrollTop = scrollAnchor;
   renderButtons();
 }
 
