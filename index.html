@@ -1179,10 +1179,16 @@ function cmdResistRyan() {
     if (ryanResistTimeout) { clearTimeout(ryanResistTimeout); ryanResistTimeout = null; }
     G.pendingEvent = null;
     G.ryanActive = false;
+    const ryanExits = [
+      '"Hey, I respect the grind. I\'ll hit you up next time."',
+      '"No worries man. Stay focused. That\'s real."',
+      '"I\'ll circle back. Go get that money."',
+      '"Bro. Discipline. I see you."',
+      '"Respect. Catch you on the next one."',
+    ];
     printBlank();
-    print('  💪 Ryan\'s face falls. "Bro. I thought we were friends."', 'dim');
-    print('  He gets back in his truck. Slowly. Dramatically.', 'dim');
-    print('  The deal dies. Your money lives.', 'money');
+    print(`  💪 Ryan: ${pick(ryanExits)}`, 'money');
+    print('  He drives off. The deal dies. Your money lives.', 'dim');
     printBlank();
     out.scrollTop = out.scrollHeight;
     afterAction();
