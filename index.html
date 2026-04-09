@@ -3040,7 +3040,9 @@ function _introScrollStep(ts) {
 
 out.scrollTop = 0;
 _introScrollPos = 0;
-introScrollRAF = requestAnimationFrame(_introScrollStep);
+setTimeout(() => {
+  if (introScrolling) introScrollRAF = requestAnimationFrame(_introScrollStep);
+}, 2500);
 
 out.addEventListener('touchstart', stopIntroScroll, { passive: true });
 out.addEventListener('wheel', stopIntroScroll, { passive: true });
