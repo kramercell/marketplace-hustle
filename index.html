@@ -643,6 +643,21 @@ function smoothScrollToBottom() {
   _ssRAF = requestAnimationFrame(step);
 }
 
+// When the button panel grows/shrinks, #output resizes.
+// If the user was at (or near) the bottom, scroll back down so the
+// last line stays visible instead of disappearing behind the panel.
+let _outPrevHeight = 0;
+new ResizeObserver(entries => {
+  const newHeight = entries[0].contentRect.height;
+  if (newHeight < _outPrevHeight) {
+    // Panel got taller — snap bottom into view without animation
+    // (panel resize is instant; smooth scroll would feel laggy here)
+    const atBottom = out.scrollTop >= out.scrollHeight - _outPrevHeight - 40;
+    if (atBottom) out.scrollTop = out.scrollHeight - newHeight;
+  }
+  _outPrevHeight = newHeight;
+}).observe(out);
+
 function printBar(label, val, max, color='#00ff41', warnColor='#ffaa00', dangerColor='#ff3333') {
   const pct = Math.min(100, Math.max(0, Math.round((val/max)*100)));
   const filled = Math.round(pct/4);
