@@ -3414,7 +3414,9 @@ async function lbSubmit() {
   document.getElementById('lb-submit').disabled = true;
   document.getElementById('lb-status').textContent = 'Submitting...';
   try {
-    await _db.ref('scores').push({ ...(_lbScore), name });
+    console.log('[LB] submitting:', { ...(_lbScore), name });
+    const ref = await _db.ref('scores').push({ ...(_lbScore), name });
+    console.log('[LB] submit OK, key:', ref.key);
     document.getElementById('lb-status').textContent = 'Score saved!';
     _lbScore._submitted = true;
     _lbScore._name = name;
