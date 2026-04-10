@@ -538,6 +538,7 @@ const G = {
   crockettTriggerAction: window._ET.crockett,
   weeklyPrepGained: 0,
   phase: 'playing', // 'playing','won','lost'
+  sequencePlaying: false, // true during timed animations — suppresses new event triggers
   currentSong: YYT_SONGS[Math.floor(Math.random()*YYT_SONGS.length)],
   actionsTaken: 0,
   totalActionsTaken: 0,
@@ -784,13 +785,19 @@ function afterAction() {
     print('  ⚠️  Reminder: rally prep is at ' + G.rallyPrep + '%. Select <strong>prep</strong> to work on it.', 'event');
   }
 
-  rollRandomEvent();
-  if(G.pendingEvent) {
-    if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
-    else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
-    else if(G.pendingEvent.type === 'kramer') triggerKramerEvent();
-    else if(G.pendingEvent.type === 'ryan') triggerRyanEvent();
-    else triggerRallyEvent();
+  // Don't fire new events mid-animation (e.g. Kramer motor reveal, Billy reversal).
+  // Handlers set G.sequencePlaying = true before afterAction() and clear it when
+  // the animation setTimeout resolves, so we never interleave event banners with
+  // in-progress narrative text.
+  if (!G.sequencePlaying) {
+    rollRandomEvent();
+    if(G.pendingEvent) {
+      if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
+      else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
+      else if(G.pendingEvent.type === 'kramer') triggerKramerEvent();
+      else if(G.pendingEvent.type === 'ryan') triggerRyanEvent();
+      else triggerRallyEvent();
+    }
   }
 
   // Auto-advance week after maxActionsPerWeek actions with no blocking event
@@ -1234,12 +1241,13 @@ function cmdHelpKramer() {
   printBlank();
   print('  Matt heads out and tows Kramer back to the dock.', 'dim');
   print('  It takes a while. Kramer talks the entire time.', 'dim');
-  afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
+  G.sequencePlaying = true;
+  afterAction();
   setTimeout(() => {
+    G.sequencePlaying = false;
     print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
     print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
     print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
-    smoothScrollToBottom();
     renderButtons();
   }, 1200);
 }
@@ -1251,13 +1259,14 @@ function cmdIgnoreKramer() {
   G.energy = Math.min(100, G.energy + 40);
   printBlank();
   print('  Matt ignores him and gets back to the grind.', 'dim');
-  afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
+  G.sequencePlaying = true;
+  afterAction();
   setTimeout(() => {
+    G.sequencePlaying = false;
     printBlank();
     print('  Kramer sinks with the boat.', 'error');
     print('  Matt: "That\'s the way she goes..."', 'dim');
     print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
-    smoothScrollToBottom();
     renderButtons();
   }, 1200);
 }
@@ -2582,13 +2591,14 @@ function amishRobbery(item, listingIdx) {
     printBlank();
     print('  Matt has energy. He runs. The buggy pulls away suspiciously fast.', 'special');
     print('  He catches a wheel. A panel pops off: 48-volt battery. Brushless motor.', 'money');
-    afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
+    G.sequencePlaying = true;
+    afterAction();
     setTimeout(() => {
+      G.sequencePlaying = false;
       print('  Matt: "...You have an electric motor in this buggy."', 'special');
       print('  Elder: "The Lord works in mysterious ways." *hands back the money and the furniture, leaves at 35mph*', 'dim');
       printBlank();
       print(`  💰 Money back: +$${money(actualStolen)} | ${item.emoji} ${item.name} added to inventory`, 'money');
-      smoothScrollToBottom();
       renderButtons();
     }, 1200);
   } else {
@@ -2615,12 +2625,13 @@ function cmdStopBilly() {
   printBlank();
   print('  🚛 Matt steps in front of the truck. Billy locks eyes with him.', 'dim');
   print('  Billy reverses. Aggressively. Down the entire street.', 'dim');
-  afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
+  G.sequencePlaying = true;
+  afterAction();
   setTimeout(() => {
+    G.sequencePlaying = false;
     print('  Tools clattered off the truck bed on the way out.', 'money');
     print('  🌿 Landscaping Tools added to inventory. Est. $800–$1,200.', 'money');
     print('  ⚡ Energy restored to 100%', 'money');
-    smoothScrollToBottom();
     updateStatus();
     renderButtons();
   }, 1200);
@@ -2635,13 +2646,13 @@ function cmdCatchHogGazin() {
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
   print('🚔  GOT \'EM! HOG GAZER APPREHENDED!', 'win');
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
-  afterAction(); // count the action now so the 4s animation doesn't phantom-count in a new week
+  G.sequencePlaying = true;
+  afterAction();
   setTimeout(() => {
     printBlank();
     print('  Matt sprinted across the lawn in Kirkland slides.', 'dim');
     print('  The slides gave him traction nobody expected. Including Matt.', 'dim');
     print('  The hog gazer tried to run. The slides were faster.', 'dim');
-    smoothScrollToBottom();
     setTimeout(() => {
       printBlank();
       print('  Matt\'s phone rings: FBI field office, Atlanta division.', 'event');
@@ -2652,13 +2663,12 @@ function cmdCatchHogGazin() {
       print('  Matt: "Yeah."', 'money');
       print('  FBI: "..."', 'event');
       print('  FBI: "Okay. The reward is yours."', 'event');
-      smoothScrollToBottom();
       setTimeout(() => {
         printBlank();
         print('  💰 $2,000 REWARD DEPOSITED. FBI Most Wanted — CAPTURED.', 'money');
         print('  Griffin barked the entire time. For once, he was right.', 'griffin');
         printBlank();
-        smoothScrollToBottom();
+        G.sequencePlaying = false;
         renderButtons();
       }, 1400);
     }, 1400);
