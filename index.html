@@ -3344,13 +3344,17 @@ function lbFetchAll(forceRefresh) {
     _lbFetchPromise = _db.ref('scores').once('value').then(snap => {
       const all = [];
       snap.forEach(child => { all.push({ key: child.key, ...child.val() }); });
-      // Keep only best score per name (case-insensitive)
-      const best = {};
+      // Keep only best score per name, then deduplicate by profit
+      const byName = {};
       all.forEach(r => {
         const k = r.name.trim().toLowerCase();
-        if (!best[k] || r.profit > best[k].profit) best[k] = r;
+        if (!byName[k] || r.profit > byName[k].profit) byName[k] = r;
       });
-      const rows = Object.values(best);
+      const byProfit = {};
+      Object.values(byName).forEach(r => {
+        if (!byProfit[r.profit]) byProfit[r.profit] = r;
+      });
+      const rows = Object.values(byProfit);
       rows.sort((a, b) => b.profit - a.profit);
       return rows;
     });
