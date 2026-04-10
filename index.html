@@ -577,11 +577,18 @@ function beerClass(b) {
 // ============================================================
 const out = document.getElementById('output');
 
+let _printScrollPending = false;
 function print(text='', cls='') {
   const d = document.createElement('div');
   d.className = 'line' + (cls ? ' '+cls : '');
   d.innerHTML = (buzzActive && text && !text.startsWith('╔') && !text.startsWith('║') && !text.startsWith('╚')) ? buzzify(text) : text;
   out.appendChild(d);
+  // Trigger smooth scroll after every print, but debounce to one scroll per frame
+  // so a burst of prints (e.g. a full event block) only animates once.
+  if (!_printScrollPending) {
+    _printScrollPending = true;
+    requestAnimationFrame(() => { _printScrollPending = false; smoothScrollToBottom(); });
+  }
 }
 
 function printBlank() { print('&nbsp;'); }
