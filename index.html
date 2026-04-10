@@ -66,7 +66,7 @@
   #lb-preview .lb-pre-entry .lb-pre-name { color: #00cc33; }
   #lb-preview .lb-pre-entry .lb-pre-profit { color: #00ffaa; }
   #lb-preview .lb-pre-none { color: #004400; font-size: 18px; }
-  .game-stats { display: none; }
+  .game-stats { display: none !important; }
   .stat .warn { color: #ffaa00; }
   .stat .danger { color: #ff3333; }
   .stat .good { color: #00ffaa; }
@@ -3057,7 +3057,7 @@ function processCommand(raw, displayOverride) {
       startMusic();
       // Swap status bar from leaderboard preview to game stats
       document.getElementById('lb-preview').style.display = 'none';
-      document.querySelectorAll('.game-stats').forEach(el => el.style.display = '');
+      document.querySelectorAll('.game-stats').forEach(el => { el.classList.remove('game-stats'); });
       renderButtons();
       break;
     case 'catch':
