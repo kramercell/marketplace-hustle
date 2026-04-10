@@ -60,6 +60,8 @@
     font-size: 20px;
   }
   #lb-preview .lb-pre-title { color: #00aa22; font-size: 18px; margin-bottom: 2px; }
+  #lb-preview .lb-pre-clickable { cursor: pointer; text-decoration: underline; text-decoration-color: #004400; }
+  #lb-preview .lb-pre-clickable:hover { color: #00ff41; }
   #lb-preview .lb-pre-entry { color: #00ff41; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #lb-preview .lb-pre-rank { color: #006600; }
   #lb-preview .lb-pre-name { color: #00cc33; }
@@ -3345,7 +3347,7 @@ async function lbLoadPreview() {
     snap.forEach(child => rows.push(child.val()));
     rows.sort((a, b) => b.profit - a.profit);
     if (rows.length === 0) {
-      preview.innerHTML = '<span class="lb-pre-title">🏆 TOP HUSTLERS:</span><span class="lb-pre-none">No scores yet — be the first!</span>';
+      preview.innerHTML = '<span class="lb-pre-title lb-pre-clickable" onclick="lbOpenReadOnly()">🏆 TOP HUSTLERS ▸</span><span class="lb-pre-none">No scores yet — be the first!</span>';
       return;
     }
     const medals = ['🥇','🥈','🥉'];
@@ -3353,12 +3355,22 @@ async function lbLoadPreview() {
       const date = new Date(r.ts).toLocaleDateString('en-US', { month:'short', day:'numeric' });
       return `<span class="lb-pre-entry"><span class="lb-pre-rank">${medals[i]} </span><span class="lb-pre-name">${escHtml(r.name)}</span> <span class="lb-pre-profit">$${money(r.profit)}</span><span class="lb-pre-date"> ${date}</span></span>`;
     }).join('');
-    preview.innerHTML = `<span class="lb-pre-title">🏆 TOP HUSTLERS:</span>${entries}`;
+    preview.innerHTML = `<span class="lb-pre-title lb-pre-clickable" onclick="lbOpenReadOnly()">🏆 TOP HUSTLERS ▸</span>${entries}`;
   } catch(e) {
-    preview.innerHTML = '<span class="lb-pre-title">🏆 TOP HUSTLERS:</span><span class="lb-pre-none">—</span>';
+    preview.innerHTML = '<span class="lb-pre-title lb-pre-clickable" onclick="lbOpenReadOnly()">🏆 TOP HUSTLERS ▸</span><span class="lb-pre-none">—</span>';
   }
 }
 lbLoadPreview();
+
+// Open leaderboard in browse-only mode (no name entry — used from pre-game preview)
+function lbOpenReadOnly() {
+  document.getElementById('lb-name-row').style.display = 'none';
+  document.getElementById('lb-status').textContent = '';
+  document.getElementById('lb-close').textContent = '← CLOSE';
+  document.getElementById('lb-overlay').classList.add('active');
+  document.getElementById('lb-overlay').dataset.readonly = '1';
+  lbLoad();
+}
 
 // Called from endGame() — stash the run data and show the modal
 function lbOpen(profit, rallyOk) {
@@ -3378,6 +3390,10 @@ function lbOpen(profit, rallyOk) {
 
 function lbClose() {
   document.getElementById('lb-overlay').classList.remove('active');
+  // Restore name row for next game-over open
+  document.getElementById('lb-name-row').style.display = '';
+  document.getElementById('lb-close').textContent = '← BACK TO RESULTS';
+  delete document.getElementById('lb-overlay').dataset.readonly;
 }
 
 async function lbSubmit() {
