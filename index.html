@@ -66,6 +66,7 @@
   #lb-preview .lb-pre-entry .lb-pre-name { color: #00cc33; }
   #lb-preview .lb-pre-entry .lb-pre-profit { color: #00ffaa; }
   #lb-preview .lb-pre-none { color: #004400; font-size: 18px; }
+  #lb-preview .lb-pre-date { color: #004d00; font-size: 17px; }
   .game-stats { display: none !important; }
   .stat .warn { color: #ffaa00; }
   .stat .danger { color: #ff3333; }
@@ -3341,9 +3342,10 @@ async function lbLoadPreview() {
       return;
     }
     const medals = ['🥇','🥈','🥉'];
-    const entries = rows.map((r, i) =>
-      `<span class="lb-pre-entry"><span class="lb-pre-rank">${medals[i]} </span><span class="lb-pre-name">${escHtml(r.name)}</span> <span class="lb-pre-profit">$${money(r.profit)}</span></span>`
-    ).join('');
+    const entries = rows.map((r, i) => {
+      const date = new Date(r.ts).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+      return `<span class="lb-pre-entry"><span class="lb-pre-rank">${medals[i]} </span><span class="lb-pre-name">${escHtml(r.name)}</span> <span class="lb-pre-profit">$${money(r.profit)}</span><span class="lb-pre-date"> ${date}</span></span>`;
+    }).join('');
     preview.innerHTML = `<span class="lb-pre-title">🏆 TOP HUSTLERS:</span>${entries}`;
   } catch(e) {
     preview.innerHTML = '<span class="lb-pre-title">🏆 TOP HUSTLERS:</span><span class="lb-pre-none">—</span>';
