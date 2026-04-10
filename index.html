@@ -578,16 +578,34 @@ function beerClass(b) {
 const out = document.getElementById('output');
 
 let _printScrollPending = false;
+let _printBatchAnchor = null; // scrollTop captured before the first print in this rAF batch
 function print(text='', cls='') {
   const d = document.createElement('div');
   d.className = 'line' + (cls ? ' '+cls : '');
   d.innerHTML = (buzzActive && text && !text.startsWith('╔') && !text.startsWith('║') && !text.startsWith('╚')) ? buzzify(text) : text;
+
+  if (!_printScrollPending) {
+    // Capture scroll position before ANY content is added this frame.
+    // Only do the nudge if user was near the bottom (following along).
+    const nearBottom = out.scrollTop >= out.scrollHeight - out.clientHeight - 80;
+    _printBatchAnchor = nearBottom ? out.scrollTop : null;
+  }
+
   out.appendChild(d);
-  // Trigger smooth scroll after every print, but debounce to one scroll per frame
-  // so a burst of prints (e.g. a full event block) only animates once.
+
   if (!_printScrollPending) {
     _printScrollPending = true;
-    requestAnimationFrame(() => { _printScrollPending = false; smoothScrollToBottom(); });
+    requestAnimationFrame(() => {
+      _printScrollPending = false;
+      if (_printBatchAnchor !== null) {
+        // Rewind to the pre-batch position so new content starts just below
+        // the viewport, then animate down — guarantees visible scroll travel
+        // even for a single line.
+        out.scrollTop = _printBatchAnchor;
+        _printBatchAnchor = null;
+        smoothScrollToBottom();
+      }
+    });
   }
 }
 
