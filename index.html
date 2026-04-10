@@ -3343,9 +3343,8 @@ function lbFetchAll(forceRefresh) {
   if (!_lbFetchPromise || forceRefresh) {
     _lbFetchPromise = _db.ref('scores').once('value').then(snap => {
       const rows = [];
-      snap.forEach(child => rows.push({ key: child.key, ...child.val() }));
+      snap.forEach(child => { rows.push({ key: child.key, ...child.val() }); });
       rows.sort((a, b) => b.profit - a.profit);
-      console.log('[LB] fetched', rows.length, 'scores:', rows);
       return rows;
     });
   }
@@ -3414,16 +3413,13 @@ async function lbSubmit() {
   document.getElementById('lb-submit').disabled = true;
   document.getElementById('lb-status').textContent = 'Submitting...';
   try {
-    console.log('[LB] submitting:', { ...(_lbScore), name });
-    const ref = await _db.ref('scores').push({ ...(_lbScore), name });
-    console.log('[LB] submit OK, key:', ref.key);
+    await _db.ref('scores').push({ ...(_lbScore), name });
     document.getElementById('lb-status').textContent = 'Score saved!';
     _lbScore._submitted = true;
     _lbScore._name = name;
     _lbFetchPromise = null; // bust cache so fresh fetch includes the new score
     lbLoad();
   } catch(e) {
-    console.error('[LB] submit error:', e);
     document.getElementById('lb-status').textContent = 'Could not save score. Check connection.';
     document.getElementById('lb-submit').disabled = false;
   }
