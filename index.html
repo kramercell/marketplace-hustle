@@ -762,7 +762,7 @@ function rollRandomEvent() {
     printBlank();
     print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
     print('👀  HOG GAZIN\' ALERT!!!', 'event');
-    print('👀  ⚠️  TAP CATCH — 4 SECONDS BEFORE THEY GET AWAY!', 'event');
+    print('👀  ⚠️  TAP CATCH — 7 SECONDS BEFORE THEY GET AWAY!', 'event');
     print('👀  Someone just walked by and is STARING at the garage.', 'event');
     print('👀  Real suspicious-like. Eyes all big. Hog gazin\' at Matt\'s motorcycle.', 'event');
     print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
@@ -786,7 +786,7 @@ function rollRandomEvent() {
           out.scrollTop = out.scrollHeight;
         }, 1200);
       }
-    }, 4000);
+    }, 7000);
     return;
   }
 
@@ -797,7 +797,7 @@ function rollRandomEvent() {
     printBlank();
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
     print('🚛  CRAZY BILLY ALERT!!!', 'event');
-    print('🚛  ⚠️  TAP STOP BILLY — 2 SECONDS BEFORE IT\'S TOO LATE!', 'event');
+    print('🚛  ⚠️  TAP STOP BILLY — 5 SECONDS BEFORE IT\'S TOO LATE!', 'event');
     print('🚛  A rattling truck just pulled into the driveway at 2am.', 'event');
     print('🚛  It\'s Crazy Billy. He\'s started landscaping your yard!', 'event');
     print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
@@ -821,7 +821,7 @@ function rollRandomEvent() {
           out.scrollTop = out.scrollHeight;
         }, 1000);
       }
-    }, 2500);
+    }, 5500);
     return;
   }
 
@@ -989,7 +989,7 @@ function triggerGriffinEvent() {
       out.scrollTop = out.scrollHeight;
       renderButtons();
     }
-  }, 5000);
+  }, 8000);
 }
 
 // ============================================================
@@ -1122,7 +1122,7 @@ function triggerKramerEvent() {
   print('⛵  He just called Matt.', 'event');
   print('⛵ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
   print('   <strong>help-kramer</strong> (-40 energy) | <strong>ignore-kramer</strong> (+40 energy)', 'choice');
-  print('   ⚠️  5 seconds before Matt stops answering his phone.', 'choice');
+  print('   ⚠️  8 seconds before Matt stops answering his phone.', 'choice');
   out.scrollTop = out.scrollHeight;
   if (kramerAutoTimeout) clearTimeout(kramerAutoTimeout);
   kramerAutoTimeout = setTimeout(() => {
@@ -1137,7 +1137,7 @@ function triggerKramerEvent() {
       updateStatus();
       renderButtons();
     }
-  }, 5000);
+  }, 8000);
 }
 
 function cmdHelpKramer() {
@@ -1205,7 +1205,7 @@ function triggerRyanEvent() {
   print(`🎿  "Bro it's basically free at this price. Only ${money(e.cost)}. Boyne charges WAY more."`, 'special');
   print('🎿  It IS a great deal. You don\'t need it. But it\'s a GREAT deal.', 'dim');
   print('🎿 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'special');
-  print('   <strong>resist-ryan</strong> 10x in 7 seconds to send him away.', 'choice');
+  print('   <strong>resist-ryan</strong> 10x in 10 seconds to send him away.', 'choice');
   out.scrollTop = out.scrollHeight;
   renderButtons();
   if (ryanResistTimeout) clearTimeout(ryanResistTimeout);
@@ -1213,7 +1213,7 @@ function triggerRyanEvent() {
     if (G.pendingEvent && G.pendingEvent.type === 'ryan') {
       cmdCaveRyan();
     }
-  }, 7000);
+  }, 10000);
 }
 
 function cmdResistRyan() {
