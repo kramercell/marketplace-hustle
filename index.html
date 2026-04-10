@@ -257,7 +257,7 @@
   }
   .font-btn {
     font-family: 'VT323', monospace;
-    font-size: 16px;
+    font-size: 22px;
     color: #006600;
     background: transparent;
     border: none;
@@ -268,6 +268,7 @@
   }
   .font-btn:hover { color: #00ff41; }
   .font-btn:disabled { color: #003300; cursor: default; }
+  #stat-week { font-size: 30px; line-height: 1; }
   .game-btn.btn-begin { border-color: #00ff41; color: #00ff41; font-size: 18px; width: 100%; animation: blink 0.7s step-end infinite; letter-spacing: 0.06em; padding: 16px; }
 
   /* ── Quick-action button panel ─────────────────────────── */
@@ -369,7 +370,7 @@
 <body>
 
 <div id="status-bar">
-  <div class="stat">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
+  <div class="stat" id="stat-week">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
   <div class="stat">💰 CASH: $<span id="s-money">500</span></div>
   <div class="stat">🍺 BUD LIGHTS: <span id="s-beer">6</span></div>
   <div class="stat">⚡ ENERGY: <span id="s-energy">100</span>%</div>
