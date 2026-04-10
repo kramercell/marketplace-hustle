@@ -1901,6 +1901,16 @@ function cmdUpgrade() {
   renderButtons();
 }
 
+function showLeaderboardBtn(profit, rallyOk) {
+  const lbBtn = document.createElement('button');
+  lbBtn.className = 'game-btn btn-primary';
+  lbBtn.style.cssText = 'width:100%;font-size:16px;padding:12px;margin-top:4px;letter-spacing:0.05em';
+  lbBtn.textContent = '🏆 VIEW LEADERBOARD / SUBMIT SCORE';
+  lbBtn.onclick = () => lbOpen(profit, rallyOk);
+  document.getElementById('btn-panel').innerHTML = '';
+  document.getElementById('btn-panel').appendChild(lbBtn);
+}
+
 function startGameOverScroll(fromY, headerIdx) {
   out.scrollTop = fromY;
   // Flash the header lines for 2 seconds before scrolling
@@ -1973,6 +1983,7 @@ function griffinBiteGameOver() {
   print('  Refresh to try again. Maybe talk to the dog this time.', 'dim');
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+  showLeaderboardBtn(G.money - G.startMoney, false);
   startGameOverScroll(_endTop, _endIdx);
 }
 
@@ -2004,6 +2015,7 @@ function soberGameOver() {
   print('  Refresh and try again. Matt\'s got more hustle in him.', 'dim');
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+  showLeaderboardBtn(G.money - G.startMoney, false);
   startGameOverScroll(_endTop, _endIdx);
 }
 
@@ -2353,16 +2365,7 @@ function endGame() {
 
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
-
-  // Show leaderboard button in btn-panel
-  const lbBtn = document.createElement('button');
-  lbBtn.className = 'game-btn btn-primary';
-  lbBtn.style.cssText = 'width:100%;font-size:16px;padding:12px;margin-top:4px;letter-spacing:0.05em';
-  lbBtn.textContent = '🏆 VIEW LEADERBOARD / SUBMIT SCORE';
-  lbBtn.onclick = () => lbOpen(profit, rallyOk);
-  document.getElementById('btn-panel').innerHTML = '';
-  document.getElementById('btn-panel').appendChild(lbBtn);
-
+  showLeaderboardBtn(profit, rallyOk);
   startGameOverScroll(_endTop, _endIdx);
 }
 
