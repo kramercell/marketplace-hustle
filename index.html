@@ -1335,7 +1335,8 @@ function cmdCaveRyan() {
   const cost = Math.min(G.money, e.cost);
   G.money -= cost;
   printBlank();
-  print(`  💸 You used the code. $${money(cost)} dropped at Boyne.`, 'error');
+  print('  You couldn\'t resist and used the code.', 'error');
+  print(`  💸 $${money(cost)} dropped at Boyne.`, 'error');
   print(`  ${e.gear} is now in the garage.`, 'dim');
   print('  Worth it.', 'dim');
   printBlank();
