@@ -1162,12 +1162,12 @@ function cmdHelpKramer() {
   printBlank();
   print('  Matt heads out and tows Kramer back to the dock.', 'dim');
   print('  It takes a while. Kramer talks the entire time.', 'dim');
+  afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
   setTimeout(() => {
     print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
     print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
     print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
     out.scrollTop = out.scrollHeight;
-    afterAction();
     renderButtons();
   }, 1200);
 }
@@ -1179,13 +1179,13 @@ function cmdIgnoreKramer() {
   G.energy = Math.min(100, G.energy + 40);
   printBlank();
   print('  Matt ignores him and gets back to the grind.', 'dim');
+  afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
   setTimeout(() => {
     printBlank();
     print('  Kramer sinks with the boat.', 'error');
     print('  Matt: "That\'s the way she goes..."', 'dim');
     print(`  ⚡ +40 energy | ${G.energy}% remaining`, 'money');
     out.scrollTop = out.scrollHeight;
-    afterAction();
     renderButtons();
   }, 1200);
 }
@@ -1831,12 +1831,13 @@ function cmdDeal() {
 
 function cmdIgnoreTSwan() {
   if (!G.pendingEvent || G.pendingEvent.type !== 'tswam') return;
+  G.pendingEvent = null; // clear before cmdNext so T-Swan penalty narrative doesn't also fire
   printBlank();
   print('  😶 Matt pretends not to see T-Swan. Stares at his phone.', 'dim');
   print('  T-Swan is still there. He\'s not leaving.', 'error');
   print('  T-Swan: "I can see you, man."', 'error');
-  // Ignoring T-Swan costs the whole day — same as hitting next with a pending tswan
-  cmdNext();
+  print('  Matt stays on his phone. T-Swan eventually wanders off. The whole day goes.', 'dim');
+  cmdNext(); // losing the day is the penalty — week advances
 }
 
 function cmdIgnoreGriffin() {
@@ -2509,13 +2510,13 @@ function amishRobbery(item, listingIdx) {
     printBlank();
     print('  Matt has energy. He runs. The buggy pulls away suspiciously fast.', 'special');
     print('  He catches a wheel. A panel pops off: 48-volt battery. Brushless motor.', 'money');
+    afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
     setTimeout(() => {
       print('  Matt: "...You have an electric motor in this buggy."', 'special');
       print('  Elder: "The Lord works in mysterious ways." *hands back the money and the furniture, leaves at 35mph*', 'dim');
       printBlank();
       print(`  💰 Money back: +$${money(actualStolen)} | ${item.emoji} ${item.name} added to inventory`, 'money');
       out.scrollTop = out.scrollHeight;
-      afterAction();
       renderButtons();
     }, 1200);
   } else {
@@ -2542,13 +2543,13 @@ function cmdStopBilly() {
   printBlank();
   print('  🚛 Matt steps in front of the truck. Billy locks eyes with him.', 'dim');
   print('  Billy reverses. Aggressively. Down the entire street.', 'dim');
+  afterAction(); // count the action now so deferred text doesn't phantom-count in a new week
   setTimeout(() => {
     print('  Tools clattered off the truck bed on the way out.', 'money');
     print('  🌿 Landscaping Tools added to inventory. Est. $800–$1,200.', 'money');
     print('  ⚡ Energy restored to 100%', 'money');
     out.scrollTop = out.scrollHeight;
     updateStatus();
-    afterAction();
     renderButtons();
   }, 1200);
 }
@@ -2562,6 +2563,7 @@ function cmdCatchHogGazin() {
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
   print('🚔  GOT \'EM! HOG GAZER APPREHENDED!', 'win');
   print('🚔 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'win');
+  afterAction(); // count the action now so the 4s animation doesn't phantom-count in a new week
   setTimeout(() => {
     printBlank();
     print('  Matt sprinted across the lawn in Kirkland slides.', 'dim');
@@ -2585,7 +2587,6 @@ function cmdCatchHogGazin() {
         print('  Griffin barked the entire time. For once, he was right.', 'griffin');
         printBlank();
         out.scrollTop = out.scrollHeight;
-        afterAction();
         renderButtons();
       }, 1400);
     }, 1400);
