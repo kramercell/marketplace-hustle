@@ -3345,6 +3345,7 @@ function lbFetchAll(forceRefresh) {
       const rows = [];
       snap.forEach(child => rows.push({ key: child.key, ...child.val() }));
       rows.sort((a, b) => b.profit - a.profit);
+      console.log('[LB] fetched', rows.length, 'scores:', rows);
       return rows;
     });
   }
@@ -3420,6 +3421,7 @@ async function lbSubmit() {
     _lbFetchPromise = null; // bust cache so fresh fetch includes the new score
     lbLoad();
   } catch(e) {
+    console.error('[LB] submit error:', e);
     document.getElementById('lb-status').textContent = 'Could not save score. Check connection.';
     document.getElementById('lb-submit').disabled = false;
   }
