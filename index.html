@@ -365,9 +365,125 @@
     }
   }
 
+  /* ── Leaderboard modal ──────────────────────────────────── */
+  #lb-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #lb-overlay.active { display: flex; }
+  #lb-box {
+    background: #050f05;
+    border: 1px solid #00ff41;
+    box-shadow: 0 0 40px rgba(0,255,65,0.2);
+    padding: 24px 28px;
+    width: min(520px, 94vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    font-family: 'Share Tech Mono', monospace;
+    color: #00ff41;
+  }
+  #lb-box h2 {
+    font-family: 'VT323', monospace;
+    font-size: 30px;
+    color: #00ff41;
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+  }
+  #lb-box .lb-sub {
+    color: #006600;
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+  #lb-name-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  #lb-name {
+    flex: 1;
+    background: #001200;
+    border: 1px solid #00aa22;
+    color: #00ff41;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    padding: 8px 12px;
+    outline: none;
+  }
+  #lb-name::placeholder { color: #004400; }
+  #lb-submit {
+    background: transparent;
+    border: 1px solid #00ff41;
+    color: #00ff41;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    padding: 8px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #lb-submit:hover { background: #002200; }
+  #lb-submit:disabled { border-color: #003300; color: #004400; cursor: default; }
+  #lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  #lb-table th {
+    color: #006600;
+    text-align: left;
+    padding: 4px 8px;
+    border-bottom: 1px solid #003300;
+    font-weight: normal;
+    white-space: nowrap;
+  }
+  #lb-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #001a00;
+    color: #00cc33;
+    white-space: nowrap;
+  }
+  #lb-table tr.lb-me td { color: #00ff41; background: #001a00; }
+  #lb-table tr:first-child td { color: #ffff00; }
+  #lb-status { color: #006600; font-size: 13px; margin-top: 10px; min-height: 18px; }
+  #lb-close {
+    display: block;
+    margin-top: 18px;
+    background: transparent;
+    border: 1px solid #004400;
+    color: #006600;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 7px 16px;
+    cursor: pointer;
+    width: 100%;
+  }
+  #lb-close:hover { border-color: #00ff41; color: #00ff41; }
 </style>
 </head>
 <body>
+
+<div id="lb-overlay">
+  <div id="lb-box">
+    <h2>🏆 LEADERBOARD</h2>
+    <div class="lb-sub">IRIS DRIVE HALL OF FAME — TOP HUSTLERS</div>
+    <div id="lb-name-row">
+      <input id="lb-name" type="text" maxlength="20" placeholder="Enter your name..." autocomplete="off" spellcheck="false">
+      <button id="lb-submit" onclick="lbSubmit()">SUBMIT</button>
+    </div>
+    <table id="lb-table">
+      <thead><tr>
+        <th>#</th><th>NAME</th><th>PROFIT</th><th>PREP</th><th>RESULT</th><th>DATE</th>
+      </tr></thead>
+      <tbody id="lb-rows"></tbody>
+    </table>
+    <div id="lb-status"></div>
+    <button id="lb-close" onclick="lbClose()">← BACK TO RESULTS</button>
+  </div>
+</div>
 
 <div id="status-bar">
   <div class="stat" id="stat-week">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
@@ -2237,6 +2353,16 @@ function endGame() {
 
   document.getElementById('cmd-input').disabled = true;
   document.getElementById('cmd-input').placeholder = 'Game over. Refresh to play again.';
+
+  // Show leaderboard button in btn-panel
+  const lbBtn = document.createElement('button');
+  lbBtn.className = 'game-btn btn-primary';
+  lbBtn.style.cssText = 'width:100%;font-size:16px;padding:12px;margin-top:4px;letter-spacing:0.05em';
+  lbBtn.textContent = '🏆 VIEW LEADERBOARD / SUBMIT SCORE';
+  lbBtn.onclick = () => lbOpen(profit, rallyOk);
+  document.getElementById('btn-panel').innerHTML = '';
+  document.getElementById('btn-panel').appendChild(lbBtn);
+
   startGameOverScroll(_endTop, _endIdx);
 }
 
@@ -3144,6 +3270,104 @@ out.addEventListener('touchstart', stopIntroScroll, { passive: true });
 out.addEventListener('wheel', stopIntroScroll, { passive: true });
 out.addEventListener('mousedown', stopIntroScroll);
 
+</script>
+
+<!-- Firebase Realtime Database (compat SDK — works in plain HTML, no bundler) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// ============================================================
+//  FIREBASE + LEADERBOARD
+// ============================================================
+firebase.initializeApp({
+  apiKey:            "AIzaSyBq3LDZTna09kYLSjIkrSUurzZGBhv5ECs",
+  authDomain:        "marketplace-hustle.firebaseapp.com",
+  databaseURL:       "https://marketplace-hustle-default-rtdb.firebaseio.com",
+  projectId:         "marketplace-hustle",
+  storageBucket:     "marketplace-hustle.firebasestorage.app",
+  messagingSenderId: "398454446890",
+  appId:             "1:398454446890:web:f3ad5452eeb38036915c53",
+});
+const _db = firebase.database();
+
+let _lbScore = null; // score object for the current run, set in endGame
+
+function lbResultLabel(profit, rallyOk) {
+  if (!rallyOk)        return 'FAILED RALLY';
+  if (profit >= 25000) return 'LEGENDARY';
+  if (profit >= 15000) return 'GOOD';
+  if (profit >= 7000)  return 'DECENT';
+  return 'POOR';
+}
+
+// Called from endGame() — stash the run data and show the modal
+function lbOpen(profit, rallyOk) {
+  _lbScore = {
+    profit,
+    rallyPrep: G.rallyPrep,
+    result: lbResultLabel(profit, rallyOk),
+    ts: Date.now(),
+  };
+  document.getElementById('lb-name').value = '';
+  document.getElementById('lb-status').textContent = '';
+  document.getElementById('lb-submit').disabled = false;
+  document.getElementById('lb-overlay').classList.add('active');
+  document.getElementById('lb-name').focus();
+  lbLoad(); // show current board immediately while user types name
+}
+
+function lbClose() {
+  document.getElementById('lb-overlay').classList.remove('active');
+}
+
+async function lbSubmit() {
+  const name = document.getElementById('lb-name').value.trim();
+  if (!name) { document.getElementById('lb-status').textContent = 'Enter a name first.'; return; }
+  document.getElementById('lb-submit').disabled = true;
+  document.getElementById('lb-status').textContent = 'Submitting...';
+  try {
+    await _db.ref('scores').push({ ...(_lbScore), name });
+    document.getElementById('lb-status').textContent = 'Score saved!';
+    _lbScore._submitted = true;
+    _lbScore._name = name;
+    lbLoad();
+  } catch(e) {
+    document.getElementById('lb-status').textContent = 'Could not save score. Check connection.';
+    document.getElementById('lb-submit').disabled = false;
+  }
+}
+
+async function lbLoad() {
+  const snap = await _db.ref('scores').orderByChild('profit').limitToLast(10).once('value');
+  const rows = [];
+  snap.forEach(child => rows.push({ key: child.key, ...child.val() }));
+  rows.sort((a, b) => b.profit - a.profit);
+
+  const tbody = document.getElementById('lb-rows');
+  tbody.innerHTML = '';
+  rows.forEach((r, i) => {
+    const isMe = _lbScore && _lbScore._submitted && r.name === _lbScore._name
+                 && r.profit === _lbScore.profit && r.ts === _lbScore.ts;
+    const date = new Date(r.ts).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+    const tr = document.createElement('tr');
+    if (isMe) tr.className = 'lb-me';
+    tr.innerHTML = `<td>${medal}</td><td>${escHtml(r.name)}</td><td>$${money(r.profit)}</td><td>${r.rallyPrep}%</td><td>${escHtml(r.result)}</td><td>${date}</td>`;
+    tbody.appendChild(tr);
+  });
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:#004400;padding:12px 8px">No scores yet. Be the first!</td></tr>';
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Allow submitting with Enter key
+document.getElementById('lb-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') lbSubmit();
+});
 </script>
 </body>
 </html>
