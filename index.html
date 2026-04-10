@@ -3342,8 +3342,15 @@ let _lbFetchPromise = null;
 function lbFetchAll(forceRefresh) {
   if (!_lbFetchPromise || forceRefresh) {
     _lbFetchPromise = _db.ref('scores').once('value').then(snap => {
-      const rows = [];
-      snap.forEach(child => { rows.push({ key: child.key, ...child.val() }); });
+      const all = [];
+      snap.forEach(child => { all.push({ key: child.key, ...child.val() }); });
+      // Keep only best score per name (case-insensitive)
+      const best = {};
+      all.forEach(r => {
+        const k = r.name.trim().toLowerCase();
+        if (!best[k] || r.profit > best[k].profit) best[k] = r;
+      });
+      const rows = Object.values(best);
       rows.sort((a, b) => b.profit - a.profit);
       return rows;
     });
