@@ -51,6 +51,22 @@
 
   .stat { color: #00cc33; }
   .stat span { color: #00ff41; }
+  #lb-preview {
+    width: 100%;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+  }
+  #lb-preview .lb-pre-title { color: #00aa22; font-size: 20px; white-space: nowrap; }
+  #lb-preview .lb-pre-entry { color: #00ff41; white-space: nowrap; }
+  #lb-preview .lb-pre-entry .lb-pre-rank { color: #006600; font-size: 18px; }
+  #lb-preview .lb-pre-entry .lb-pre-name { color: #00cc33; }
+  #lb-preview .lb-pre-entry .lb-pre-profit { color: #00ffaa; }
+  #lb-preview .lb-pre-none { color: #004400; font-size: 18px; }
+  .game-stats { display: none; }
   .stat .warn { color: #ffaa00; }
   .stat .danger { color: #ff3333; }
   .stat .good { color: #00ffaa; }
@@ -338,6 +354,7 @@
       gap: 3px 8px;
       padding: 6px 10px;
     }
+    #lb-preview { grid-column: 1 / -1; font-size: 18px; gap: 10px; }
 
     /* Output: clip horizontal overflow from wide box-art lines */
     #output {
@@ -486,12 +503,16 @@
 </div>
 
 <div id="status-bar">
-  <div class="stat" id="stat-week">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
-  <div class="stat">💰 CASH: $<span id="s-money">500</span></div>
-  <div class="stat">🍺 BUD LIGHTS: <span id="s-beer">6</span></div>
-  <div class="stat">⚡ ENERGY: <span id="s-energy">100</span>%</div>
-  <div class="stat">🎉 RALLY PREP: <span id="s-rally">0</span>%</div>
-  <div class="stat">📦 INVENTORY: <span id="s-inv">0</span> items</div>
+  <div id="lb-preview">
+    <span class="lb-pre-title">🏆 TOP HUSTLERS:</span>
+    <span class="lb-pre-none">Loading...</span>
+  </div>
+  <div class="stat game-stats" id="stat-week">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
+  <div class="stat game-stats">💰 CASH: $<span id="s-money">500</span></div>
+  <div class="stat game-stats">🍺 BUD LIGHTS: <span id="s-beer">6</span></div>
+  <div class="stat game-stats">⚡ ENERGY: <span id="s-energy">100</span>%</div>
+  <div class="stat game-stats">🎉 RALLY PREP: <span id="s-rally">0</span>%</div>
+  <div class="stat game-stats">📦 INVENTORY: <span id="s-inv">0</span> items</div>
 </div>
 
 <audio id="bg-music" src="assets/90sChiptune.mp3" loop></audio>
@@ -3034,6 +3055,9 @@ function processCommand(raw, displayOverride) {
       G.started = true;
       stopIntroScroll();
       startMusic();
+      // Swap status bar from leaderboard preview to game stats
+      document.getElementById('lb-preview').style.display = 'none';
+      document.querySelectorAll('.game-stats').forEach(el => el.style.display = '');
       renderButtons();
       break;
     case 'catch':
@@ -3302,6 +3326,30 @@ function lbResultLabel(profit, rallyOk) {
   if (profit >= 7000)  return 'DECENT';
   return 'POOR';
 }
+
+// Load top 3 into the status bar preview shown before game starts
+async function lbLoadPreview() {
+  const preview = document.getElementById('lb-preview');
+  if (!preview) return;
+  try {
+    const snap = await _db.ref('scores').orderByChild('profit').limitToLast(3).once('value');
+    const rows = [];
+    snap.forEach(child => rows.push(child.val()));
+    rows.sort((a, b) => b.profit - a.profit);
+    if (rows.length === 0) {
+      preview.innerHTML = '<span class="lb-pre-title">🏆 TOP HUSTLERS:</span><span class="lb-pre-none">No scores yet — be the first!</span>';
+      return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    const entries = rows.map((r, i) =>
+      `<span class="lb-pre-entry"><span class="lb-pre-rank">${medals[i]} </span><span class="lb-pre-name">${escHtml(r.name)}</span> <span class="lb-pre-profit">$${money(r.profit)}</span></span>`
+    ).join('');
+    preview.innerHTML = `<span class="lb-pre-title">🏆 TOP HUSTLERS:</span>${entries}`;
+  } catch(e) {
+    preview.innerHTML = '<span class="lb-pre-title">🏆 TOP HUSTLERS:</span><span class="lb-pre-none">—</span>';
+  }
+}
+lbLoadPreview();
 
 // Called from endGame() — stash the run data and show the modal
 function lbOpen(profit, rallyOk) {
