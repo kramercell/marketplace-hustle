@@ -134,6 +134,8 @@
 
   .blink { animation: blink 1s step-end infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .blink-slow { animation: blinkSlow 2.4s ease-in-out infinite; }
+  @keyframes blinkSlow { 0%,100%{opacity:1} 50%{opacity:0.1} }
   .end-header { animation: blink 0.35s step-end infinite; }
 
   @keyframes drunkNeighbor {
@@ -3092,6 +3094,9 @@ function intro() {
     print('  Facebook Marketplace is open on his phone.', 'dim');
     print('  The deals are out there. They\'re not going to flip themselves.', 'dim');
     print('  ─────────────────────────────────────────────────────', 'dim');
+    printBlank();
+    print('  <span class="blink-slow" style="color:#00ff41;font-family:\'VT323\',monospace;font-size:22px;letter-spacing:0.08em">NICE PLACE...</span>', '');
+    print('  <span class="blink-slow" style="color:#00ff41;font-family:\'VT323\',monospace;font-size:22px;letter-spacing:0.08em">DON\'T MIND IF I STRETCH OUT!</span>', '');
     printBlank();
     print('  Select <strong>browse</strong> to start scoring deals. Use the <strong>more</strong> button for all options.', 'choice');
     printBlank();
