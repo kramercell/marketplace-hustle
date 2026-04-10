@@ -800,8 +800,10 @@ function afterAction() {
     }
   }
 
-  // Auto-advance week after maxActionsPerWeek actions with no blocking event
-  if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing') {
+  // Auto-advance week after maxActionsPerWeek actions with no blocking event.
+  // Guard !autoAdvanceTimer is critical: without it, a tap during the 1800ms window
+  // schedules a second timer. timerA fires → week advances → timerB still fires → double-advance.
+  if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer) {
     printBlank();
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
