@@ -1567,6 +1567,8 @@ function cmdBrowse() {
   printBlank();
   print(`  Select a listing to buy, negotiate, or lowball.`, 'choice');
   G.energy = Math.max(0, G.energy - 3);
+  // Cancel any pending week-advance so browse results aren't interrupted
+  if(autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
   // Set listings mode BEFORE afterAction so the browse lockout in rollRandomEvent is active
   btnCtx = { mode: 'listings', selectedListing: null };
   afterAction();
@@ -2936,6 +2938,13 @@ function renderButtons() {
     });
     addBtn(panel, '← PASS', null, 'btn-back', () => {
       btnCtx.mode = 'default'; renderButtons();
+      // Re-arm week-advance if actions were already maxed before we entered browse
+      if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer) {
+        printBlank();
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+        print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
+        autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 1800);
+      }
     });
     return;
   }
