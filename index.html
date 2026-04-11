@@ -1772,12 +1772,12 @@ function cmdSell(idx) {
     G.inventory = [];
     let totalRevenue = 0, totalProfit = 0;
     printBlank();
+    G.energy = Math.max(0, G.energy - 10);
     for(const item of items) {
       const sellPrice = rnd(item.sellMin, item.sellMax);
       const profit = sellPrice - item.paidPrice;
       G.money += sellPrice;
       G.totalProfit += profit;
-      G.energy = Math.max(0, G.energy - 10);
       totalRevenue += sellPrice;
       totalProfit += profit;
       print(`  💸 SOLD: ${item.emoji} ${item.name} — Paid $${money(item.paidPrice)} → $${money(sellPrice)} (${profit >= 0 ? '+' : ''}$${money(profit)})`, profit >= 0 ? 'money' : 'error');
