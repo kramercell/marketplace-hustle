@@ -1120,8 +1120,8 @@ function rollRandomEvent() {
   }
 
   const r = Math.random();
-  // griffin barks: 5%
-  if(r < 0.05) {
+  // griffin barks: 2%
+  if(r < 0.02) {
     const neighbors = ['the mailman','a jogger','Dave from two doors down',
       'a squirrel (just a squirrel)','the Amazon guy','someone walking a golden retriever',
       'a kid on a bike','the lawn care truck','literally nobody visible',
@@ -1143,20 +1143,20 @@ function rollRandomEvent() {
     print('  Matt watches for a moment. Takes a sip. Gets back to work.', 'dim');
     return;
   }
-  // T-Swan shows up: ~2%, first half of week only
-  if(r < 0.10 && G.actionsTaken <= 5) {
+  // T-Swan shows up: ~1%, first half of week only
+  if(r < 0.03 && G.actionsTaken <= 5) {
     G.pendingEvent = { type:'tswam' };
     return;
   }
-  // fireworks text from Facebook: ~3%
-  if(r < 0.13) {
+  // fireworks text from Facebook: ~1.5%
+  if(r < 0.045) {
     const pool = [...Array(FIREWORKS_ANSWERS.length).keys()];
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
     G.pendingEvent = { type:'fireworks', opts: pool.slice(0,3) };
     return;
   }
-  // "Is this still available?" ghost — ~2%, only if inventory has items
-  if(r < 0.15 && G.inventory.length > 0) {
+  // "Is this still available?" ghost — ~1%, only if inventory has items
+  if(r < 0.055 && G.inventory.length > 0) {
     const item = pick(G.inventory);
     const ghostMessages = [
       'Is this still available?',
@@ -1181,14 +1181,14 @@ function rollRandomEvent() {
     }, 900);
     return;
   }
-  // other boat rally questions: ~3%
-  if(r < 0.18) {
+  // other boat rally questions: ~1.5%
+  if(r < 0.07) {
     const q = pick(OTHER_RALLY_QUESTIONS);
     G.pendingEvent = { type:'rally', q:q.q, a:q.a };
     return;
   }
   // bud light run low warning
-  if(G.budLights <= 1 && r < 0.55) {
+  if(G.budLights <= 1 && r < 0.25) {
     print('', '');
     print('⚠️  CRITICAL: You are almost out of Bud Light. This is not a drill.', 'event');
     print('   Consider restocking. Matt does not function well without fuel.', 'dim');
