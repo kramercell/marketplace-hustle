@@ -1095,12 +1095,8 @@ function rollRandomEvent() {
     G.billyActive = true;
     G.billySeen = true;
     printBlank();
-    print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
-    print('🚛  CRAZY BILLY ALERT!!!', 'event');
-    print('🚛  ⚠️  TAP STOP BILLY — 5 SECONDS BEFORE IT\'S TOO LATE!', 'event');
-    print('🚛  A rattling truck just pulled into the driveway at 2am.', 'event');
-    print('🚛  It\'s Crazy Billy. He\'s started landscaping your yard!', 'event');
-    print('🚛 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    print('🚛  Crazy Billy just pulled up and started landscaping the yard uninvited.', 'event');
+    print('   Tap <strong>stop billy</strong> before he invoices you.', 'choice');
     smoothScrollToBottom();
     renderButtons();
     billyTimeout = setTimeout(() => {
@@ -1169,12 +1165,8 @@ function rollRandomEvent() {
     G.hogGazinActive = true;
     G.hogGazinSeen = true;
     printBlank();
-    print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
-    print('👀  HOG GAZIN\' ALERT!!!', 'event');
-    print('👀  ⚠️  TAP CATCH — 7 SECONDS BEFORE THEY GET AWAY!', 'event');
-    print('👀  Someone just walked by and is STARING at the garage.', 'event');
-    print('👀  Real suspicious-like. Eyes all big. Hog gazin\' at Matt\'s motorcycle.', 'event');
-    print('👀 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'event');
+    print('👀  Someone is hog gazin\' at the motorcycle. Real suspicious-like.', 'event');
+    print('   Tap <strong>catch</strong> before they walk off with it.', 'choice');
     smoothScrollToBottom();
     renderButtons();
     hogGazinTimeout = setTimeout(() => {
@@ -1207,12 +1199,8 @@ let griffinAutoIgnoreTimeout = null;
 function triggerGriffinEvent() {
   const e = G.pendingEvent;
   printBlank();
-  print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
-  print(`🐕  GRIFFIN ALERT — tap CALM now!`, 'griffin');
-  print(`🐕  Griffin is GOING ABSOLUTELY INSANE at ${e.target}.`, 'griffin');
-  print(`🐕  The whole neighborhood can hear this.`, 'griffin');
-  print('🐕 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'griffin');
-  print('   Select <strong>calm</strong> to settle him. (Results may vary.)', 'choice');
+  print(`🐕  Griffin is going INSANE at ${e.target}.`, 'griffin');
+  print('   Tap <strong>calm</strong> before the neighbors call animal control.', 'choice');
   smoothScrollToBottom();
   if (griffinAutoIgnoreTimeout) clearTimeout(griffinAutoIgnoreTimeout);
   griffinAutoIgnoreTimeout = setTimeout(() => {
@@ -3217,31 +3205,14 @@ function intro() {
   printBlank();
 
   setTimeout(()=>{
-    print('  👤 Name:        Matt', 'system');
-    print('  🏠 Location:    Iris Drive', 'system');
-    print('  👗 Outfit:      Basketball shorts + Kirkland slides', 'system');
-    print('  🍺 Fuel Source: Bud Light (exclusively)', 'system');
-    print('  🎵 Soundtrack:  Ying Yang Twins (full discography, shuffle off)', 'system');
-    print('  🐕 Dog:         Griffin (will bark at everything. everything.)', 'system');
-    print('  🎯 Mission:', 'system');
-    print('                   Flip deals on FB Marketplace. ', 'system');
-    print('                  Prepare to host the Lake Boat Rally', 'system');
-    print('                  in 5 short weeks.', 'system');
-    print('                  Impress the Ying Yang Twins.', 'system');
+    print('  👤 Matt · Iris Drive · Basketball shorts · Bud Light', 'system');
+    print('  🐕 Griffin · 🎵 Ying Yang Twins', 'system');
     printBlank();
-    print('  ⚠️  WIN CONDITIONS:', 'event');
-    print('     • Boat Rally Prep: 75%+ (required for Ying Yang Twins visit)', 'event');
-    print('     • Profit tiers determine HOW WELL the visit goes:', 'event');
-    print('       $25,000+ → LEGENDARY: surf, best friends, Bud Light for life,', 'special');
-    print('                  D-Roc babysits Griffin (good luck)', 'special');
-    print('       $15,000+ → GOOD: surf trip, impressed, Bud Lights', 'money');
-    print('       $7,000+  → DECENT: lunch, one beer, they leave', 'event');
-    print('       Under $7k → POOR: they roast the garage and leave', 'error');
+    print('  🎯 Flip deals on FB Marketplace. Get Boat Rally Prep to 75%.', 'system');
+    print('     Impress the Ying Yang Twins. 5 weeks. Go.', 'system');
     printBlank();
     print('  🎵 Now playing: ' + G.currentSong + ' - Ying Yang Twins', 'special');
     printBlank();
-    print('  ─────────────────────────────────────────────────────', 'dim');
-    print('  It\'s the start of Week 1.', 'dim');
     print('  Matt is in his driveway. Slides on. Beer in hand.', 'dim');
     print('  ' + pick([
       'Griffin is barking at a leaf.',
@@ -3255,14 +3226,11 @@ function intro() {
       'Griffin found something in the yard. Nobody knows what.',
       'Griffin has been barking at the same spot for 4 minutes.',
     ]), 'griffin');
-    print('  Facebook Marketplace is open on his phone.', 'dim');
-    print('  The deals are out there. They\'re not going to flip themselves.', 'dim');
-    print('  ─────────────────────────────────────────────────────', 'dim');
     printBlank();
     print('  <span class="blink-slow" style="color:#00ff41;font-family:\'VT323\',monospace;font-size:22px;letter-spacing:0.08em">MATT: "NICE PLACE..."</span>', '');
     print('  <span class="blink-slow" style="color:#00ff41;font-family:\'VT323\',monospace;font-size:22px;letter-spacing:0.08em">"DON\'T MIND IF I STRETCH OUT!"</span>', '');
     printBlank();
-    print('  Select <strong>browse</strong> to start scoring deals. Use the <strong>more</strong> button for all options.', 'choice');
+    print('  Tap <strong>browse</strong> to start. Use <strong>more</strong> for all options.', 'choice');
     printBlank();
     updateStatus();
     renderButtons();
