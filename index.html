@@ -940,30 +940,39 @@ function afterAction(countAsAction = true) {
     print('  ⚠️  Reminder: rally prep is at ' + G.rallyPrep + '%. Select <strong>prep</strong> to work on it.', 'event');
   }
 
-  // Don't fire new events mid-animation (e.g. Kramer motor reveal, Billy reversal).
-  // Handlers set G.sequencePlaying = true before afterAction() and clear it when
-  // the animation setTimeout resolves, so we never interleave event banners with
-  // in-progress narrative text.
+  // Delay auto-events so they don't pile onto the action text immediately.
+  // Uses setTimeout so there's a visible pause before the event appears.
   if (!G.sequencePlaying) {
-    rollRandomEvent();
-    if(G.pendingEvent) {
-      if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
-      else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
-      else if(G.pendingEvent.type === 'kramer') triggerKramerEvent();
-      else if(G.pendingEvent.type === 'ryan') triggerRyanEvent();
-      else triggerRallyEvent();
-    }
-  }
+    setTimeout(() => {
+      if(G.phase !== 'playing') return;
+      rollRandomEvent();
+      if(G.pendingEvent) {
+        if(G.pendingEvent.type === 'griffin') triggerGriffinEvent();
+        else if(G.pendingEvent.type === 'tswam') triggerTSwanEvent();
+        else if(G.pendingEvent.type === 'kramer') triggerKramerEvent();
+        else if(G.pendingEvent.type === 'ryan') triggerRyanEvent();
+        else triggerRallyEvent();
+      }
+      renderButtons();
 
-  // Auto-advance week after maxActionsPerWeek actions with no blocking event.
-  // Guard !autoAdvanceTimer is critical: without it, a tap during the 1800ms window
-  // schedules a second timer. timerA fires → week advances → timerB still fires → double-advance.
-  const _inBrowse = typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action');
-  if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer && !_inBrowse) {
-    printBlank();
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-    print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
-    autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 1800);
+      // Auto-advance week — also delayed so it reads after action text settles
+      const _inBrowse = typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action');
+      if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer && !_inBrowse) {
+        printBlank();
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+        print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
+        autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 1800);
+      }
+    }, 600);
+  } else {
+    // Mid-animation: still check auto-advance after sequence resolves (handled by sequence itself)
+    const _inBrowse = typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action');
+    if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer && !_inBrowse) {
+      printBlank();
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+      print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
+      autoAdvanceTimer = setTimeout(() => { autoAdvanceTimer = null; cmdNext(); }, 1800);
+    }
   }
 }
 
