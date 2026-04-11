@@ -1033,9 +1033,7 @@ function fireTigerWoods() {
 
 function fireFireworks() {
   G.fireworksSeen = true;
-  const pool = [...Array(FIREWORKS_ANSWERS.length).keys()];
-  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  G.pendingEvent = { type:'fireworks', opts: pool.slice(0,3) };
+  G.pendingEvent = { type:'fireworks', answer: pick(FIREWORKS_ANSWERS) };
 }
 
 function fireRallyQ() {
@@ -1326,16 +1324,8 @@ function triggerRallyEvent() {
   const e = G.pendingEvent;
   printBlank();
   if(e.type === 'fireworks') {
-    print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
-    print('📱  Facebook Notification', 'rally');
-    print('📱  "DOES ANYONE KNOW WHEN THE FIREWORKS ARE?"', 'rally');
-    print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
-    printBlank();
-    print('   Pick a response:', 'choice');
-    e.opts.forEach((idx, i) => {
-      print(`   [${i+1}] "${FIREWORKS_ANSWERS[idx]}"`, 'choice');
-    });
-    print('   Select an answer above.', 'choice');
+    print('📱  Facebook Group: "DOES ANYONE KNOW WHEN THE FIREWORKS ARE?"', 'rally');
+    print('   Tap <strong>answer</strong> to respond.', 'choice');
   } else {
     print('📱 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'rally');
     print(`📱  INCOMING TEXT: "${e.q}"`, 'rally');
@@ -2164,13 +2154,7 @@ function cmdAnswer(num) {
   }
 
   if(G.pendingEvent.type === 'fireworks') {
-    const n = parseInt(num);
-    const opts = G.pendingEvent.opts || [0,1,2];
-    if(isNaN(n) || n < 1 || n > opts.length) {
-      print(`Pick a number 1-${opts.length}.`, 'error');
-      return;
-    }
-    const ans = FIREWORKS_ANSWERS[opts[n-1]];
+    const ans = G.pendingEvent.answer;
     printBlank();
     print('  📱 Matt types back (basketball shorts, Bud Light, Kirkland slides):', 'rally');
     print('', '');
@@ -2891,9 +2875,7 @@ function renderButtons() {
       addBtn(panel, '🤝 DEAL WITH T-SWAN', 'deal', 'btn-event');
       addBtn(panel, '🙈 IGNORE (risky)', 'ignore-tswan', 'btn-back');
     } else if (e.type === 'fireworks') {
-      e.opts.forEach((idx, i) => {
-        addBtn(panel, `ANSWER ${i+1}`, `answer ${i+1}`, 'btn-choice');
-      });
+      addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
     } else if (e.type === 'rally') {
       addBtn(panel, '📱 ANSWER', 'answer', 'btn-choice');
     } else if (e.type === 'ryan') {
