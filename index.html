@@ -1415,16 +1415,16 @@ function cmdHelpKramer() {
     printBlank();
     print('  Matt heads out. The tow takes everything he had.', 'dim');
     print('  Kramer is safe. Matt collapses on the dock.', 'dim');
-    print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
-    G.inventory.push({ id:'motor_2stroke', name:'Kramer\'s 2-Stroke Outboard Motor', emoji:'⚙️', paidPrice:0, sellMin:800, sellMax:1200 });
-    print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
+    print('  Kramer: "I\'m done with boats. Take it. I mean it. Take the whole thing."', 'money');
+    G.inventory.push({ id:'kramers_pontoon', name:"Kramer's Pontoon Boat", emoji:'🛥️', paidPrice:0, sellMin:7000, sellMax:20000 });
+    print('  🛥️  Kramer\'s Pontoon Boat added to inventory. Est. $7,000–$20,000.', 'money');
     print('  ⚡ Energy: 0% — Matt is done.', 'error');
     updateStatus();
     soberGameOver();
     return;
   }
   G.energy -= 40;
-  G.inventory.push({ id:'motor_2stroke', name:'Kramer\'s 2-Stroke Outboard Motor', emoji:'⚙️', paidPrice:0, sellMin:800, sellMax:1200 });
+  G.inventory.push({ id:'kramers_pontoon', name:"Kramer's Pontoon Boat", emoji:'🛥️', paidPrice:0, sellMin:7000, sellMax:20000 });
   printBlank();
   print('  Matt heads out and tows Kramer back to the dock.', 'dim');
   print('  It takes a while. Kramer talks the entire time.', 'dim');
@@ -1432,8 +1432,8 @@ function cmdHelpKramer() {
   afterAction();
   setTimeout(() => {
     G.sequencePlaying = false;
-    print('  Kramer: "You want this old motor? It\'s a 2-stroke. Kind of loud."', 'money');
-    print('  ⚙️  2-Stroke Outboard Motor added to inventory. Est. $800–$1,200.', 'money');
+    print('  Kramer: "I\'m done with boats. Take it. I mean it. Take the whole thing."', 'money');
+    print('  🛥️  Kramer\'s Pontoon Boat added to inventory. Est. $7,000–$20,000.', 'money');
     print(`  ⚡ -40 energy | ${G.energy}% remaining`, 'event');
     renderButtons();
   }, 1200);
