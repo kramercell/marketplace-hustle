@@ -1057,7 +1057,7 @@ function rollRandomEvent() {
   }
 
   // Ryan: fires once trigger action is reached
-  if(!G.ryanSeen && !G.ryanActive && G.totalActionsTaken >= G.ryanTriggerAction) {
+  if(!G.ryanSeen && !G.ryanActive && G.totalActionsTaken >= G.ryanTriggerAction && coin(0.4)) {
     G.ryanSeen = true;
     G.ryanActive = true;
     G.ryanResistCount = 0;
@@ -1069,7 +1069,7 @@ function rollRandomEvent() {
   }
 
   // Crockett: fires once trigger action is reached, only in weeks 2-4
-  if(!G.crockettSeen && G.totalActionsTaken >= G.crockettTriggerAction && G.week >= 2 && G.week <= 4) {
+  if(!G.crockettSeen && G.totalActionsTaken >= G.crockettTriggerAction && G.week >= 2 && G.week <= 4 && coin(0.4)) {
     G.crockettSeen = true;
     const shift = coin() ? 1 : -1;
     const oldWeek = G.week;
@@ -1096,7 +1096,7 @@ function rollRandomEvent() {
   }
 
   // Tiger Woods car accident: fires once trigger action is reached
-  if(!G.tigerWoodsSeen && G.totalActionsTaken >= G.tigerWoodsTriggerAction) {
+  if(!G.tigerWoodsSeen && G.totalActionsTaken >= G.tigerWoodsTriggerAction && coin(0.4)) {
     G.tigerWoodsSeen = true;
     const pouredOut = rnd(1, 5);
     G.budLights = Math.max(0, G.budLights - pouredOut);
@@ -1120,8 +1120,8 @@ function rollRandomEvent() {
   }
 
   const r = Math.random();
-  // griffin barks: 2%
-  if(r < 0.02) {
+  // griffin barks: 1%
+  if(r < 0.01) {
     const neighbors = ['the mailman','a jogger','Dave from two doors down',
       'a squirrel (just a squirrel)','the Amazon guy','someone walking a golden retriever',
       'a kid on a bike','the lawn care truck','literally nobody visible',
@@ -1130,7 +1130,7 @@ function rollRandomEvent() {
     return;
   }
   // T-Swan car honking distraction — fires once trigger action is reached
-  if(!G.carHonkSeen && G.totalActionsTaken >= G.tSwanHonkTriggerAction) {
+  if(!G.carHonkSeen && G.totalActionsTaken >= G.tSwanHonkTriggerAction && coin(0.4)) {
     G.carHonkSeen = true;
     const carLines = [
       'Down the street, T-Swan\'s car is honking by itself. T-Swan is spraying it with a garden hose.',
@@ -1143,20 +1143,20 @@ function rollRandomEvent() {
     print('  Matt watches for a moment. Takes a sip. Gets back to work.', 'dim');
     return;
   }
-  // T-Swan shows up: ~1%, first half of week only
-  if(r < 0.03 && G.actionsTaken <= 5) {
+  // T-Swan shows up: ~0.5%, first half of week only
+  if(r < 0.015 && G.actionsTaken <= 5) {
     G.pendingEvent = { type:'tswam' };
     return;
   }
-  // fireworks text from Facebook: ~1.5%
-  if(r < 0.045) {
+  // fireworks text from Facebook: ~0.75%
+  if(r < 0.0225) {
     const pool = [...Array(FIREWORKS_ANSWERS.length).keys()];
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
     G.pendingEvent = { type:'fireworks', opts: pool.slice(0,3) };
     return;
   }
-  // "Is this still available?" ghost — ~1%, only if inventory has items
-  if(r < 0.055 && G.inventory.length > 0) {
+  // "Is this still available?" ghost — ~0.5%, only if inventory has items
+  if(r < 0.028 && G.inventory.length > 0) {
     const item = pick(G.inventory);
     const ghostMessages = [
       'Is this still available?',
@@ -1181,14 +1181,14 @@ function rollRandomEvent() {
     }, 900);
     return;
   }
-  // other boat rally questions: ~1.5%
-  if(r < 0.07) {
+  // other boat rally questions: ~0.75%
+  if(r < 0.035) {
     const q = pick(OTHER_RALLY_QUESTIONS);
     G.pendingEvent = { type:'rally', q:q.q, a:q.a };
     return;
   }
   // bud light run low warning
-  if(G.budLights <= 1 && r < 0.25) {
+  if(G.budLights <= 1 && r < 0.10) {
     print('', '');
     print('⚠️  CRITICAL: You are almost out of Bud Light. This is not a drill.', 'event');
     print('   Consider restocking. Matt does not function well without fuel.', 'dim');
