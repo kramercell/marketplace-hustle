@@ -210,14 +210,35 @@
     vertical-align: middle;
   }
 
-  #bar-title {
+  #week-progress {
     margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    user-select: none;
+  }
+  #week-label {
     font-family: 'VT323', monospace;
-    font-size: 22px;
+    font-size: 18px;
     color: #00aa22;
     letter-spacing: 1px;
-    user-select: none;
     white-space: nowrap;
+  }
+  #week-bar-track {
+    width: 120px;
+    height: 7px;
+    background: #001a00;
+    border: 1px solid #003300;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #week-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #00ff41;
+    border-radius: 3px;
+    transition: width 0.3s ease;
   }
 
   #music-bar {
@@ -286,7 +307,6 @@
   }
   .font-btn:hover { color: #00ff41; }
   .font-btn:disabled { color: #003300; cursor: default; }
-  #stat-week { font-size: 30px; line-height: 1; }
   .game-btn.btn-begin { border-color: #00ff41; color: #00ff41; font-size: 18px; width: 100%; animation: blink 0.7s step-end infinite; letter-spacing: 0.06em; padding: 16px; }
 
   /* ── Quick-action button panel ─────────────────────────── */
@@ -517,7 +537,6 @@
     <span class="lb-pre-title">🏆 TOP HUSTLERS:</span>
     <span class="lb-pre-none">Loading...</span>
   </div>
-  <div class="stat game-stats" id="stat-week">WEEK: <span id="s-week">1</span>/<span id="s-total">5</span></div>
   <div class="stat game-stats">💰 CASH: $<span id="s-money">500</span></div>
   <div class="stat game-stats">🍺 BUD LIGHTS: <span id="s-beer">6</span></div>
   <div class="stat game-stats">⚡ ENERGY: <span id="s-energy">100</span>%</div>
@@ -532,7 +551,10 @@
   <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.4" oninput="setVolume(this.value)" onchange="setVolume(this.value)">
   <button class="font-btn" id="font-out" onclick="adjustFont(-1)" title="Smaller text">🔍−</button>
   <button class="font-btn" id="font-in"  onclick="adjustFont(1)"  title="Larger text">🔍+</button>
-  <span id="bar-title">MARKETPLACE HUSTLE</span>
+  <div id="week-progress" class="game-stats" style="display:none">
+    <span id="week-label">WEEK 1/5</span>
+    <div id="week-bar-track"><div id="week-bar-fill"></div></div>
+  </div>
 </div>
 
 <div id="output"></div>
@@ -824,8 +846,12 @@ function printBar(label, val, max, color='#00ff41', warnColor='#ffaa00', dangerC
 }
 
 function updateStatus() {
-  document.getElementById('s-week').textContent = G.week;
-  document.getElementById('s-total').textContent = G.totalWeeks;
+  // Week progress bar
+  const weekLabel = document.getElementById('week-label');
+  const weekFill  = document.getElementById('week-bar-fill');
+  if(weekLabel) weekLabel.textContent = `WEEK ${G.week}/${G.totalWeeks}`;
+  if(weekFill)  weekFill.style.width = Math.min(100, Math.round((G.actionsTaken / G.maxActionsPerWeek) * 100)) + '%';
+
   document.getElementById('s-money').textContent = money(G.money);
 
   const beerEl = document.getElementById('s-beer');
@@ -3079,7 +3105,7 @@ function processCommand(raw, displayOverride) {
       startMusic();
       // Swap status bar from leaderboard preview to game stats
       document.getElementById('lb-preview').style.display = 'none';
-      document.querySelectorAll('.game-stats').forEach(el => { el.classList.remove('game-stats'); });
+      document.querySelectorAll('.game-stats').forEach(el => { el.classList.remove('game-stats'); el.style.display = ''; });
       renderButtons();
       break;
     case 'catch':
