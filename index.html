@@ -2933,7 +2933,7 @@ function renderButtons() {
         addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball', null, `lowball ${item.name}`);
       }
       // If can't afford to lowball, no action buttons — just back
-      addBtn(panel, '← PASS', null, 'btn-back', () => {
+      addBtn(panel, '← BACK', null, 'btn-back', () => {
         btnCtx.mode = 'listings'; btnCtx.selectedListing = null; renderButtons();
       });
       return;
