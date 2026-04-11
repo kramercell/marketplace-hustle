@@ -905,9 +905,11 @@ function generateListings() {
 // ============================================================
 //  POST-ACTION HELPER
 // ============================================================
-function afterAction() {
-  G.actionsTaken++;
-  G.totalActionsTaken++;
+function afterAction(countAsAction = true) {
+  if(countAsAction) {
+    G.actionsTaken++;
+    G.totalActionsTaken++;
+  }
   updateStatus();
 
   // Energy = 0 → sober game over
@@ -1894,7 +1896,7 @@ function cmdDrink() {
     recentRecharges = [];
     triggerBuzz();
   }
-  afterAction();
+  afterAction(false); // drinking doesn't count as a time action
   renderButtons();
 }
 
