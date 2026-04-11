@@ -564,6 +564,7 @@ const ITEMS = [
   { id:'dirtbike',   name:'Dirt Bike',               buyMin:500,  buyMax:1500, sellMin:900,  sellMax:2800, emoji:'🏍' },
   { id:'jetski',     name:'Jet Ski',                 buyMin:2000, buyMax:6000, sellMin:3500, sellMax:10000,emoji:'💦' },
   { id:'pontoon',    name:'Pontoon Boat',             buyMin:4000, buyMax:12000,sellMin:7000, sellMax:20000,emoji:'🛥️' },
+  { id:'surfboat',   name:"Ashley's old Surf Boat",  buyMin:3000, buyMax:9000, sellMin:5500, sellMax:16000,emoji:'🏄', desc:'upgraded, no longer needed' },
   { id:'generator',  name:'Generator',               buyMin:200,  buyMax:800,  sellMin:400,  sellMax:1400, emoji:'⚡' },
   { id:'gokart',     name:'Go-Kart',                 buyMin:200,  buyMax:800,  sellMin:400,  sellMax:1400, emoji:'🏎️' },
   { id:'treadmill',  name:'Treadmill',               buyMin:100,  buyMax:400,  sellMin:200,  sellMax:700,  emoji:'🏃' },
@@ -886,7 +887,7 @@ function generateListings() {
     G.listings.push({
       ...item,
       askPrice,
-      condition: pick(isAmish ? amishConditions : regularConditions),
+      condition: item.desc || pick(isAmish ? amishConditions : regularConditions),
       seller: pick(isAmish ? amishSellers : regularSellers)
     });
   }
