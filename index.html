@@ -690,6 +690,7 @@ const G = {
   crockettSeen: false,
   ryanSeen: false,
   hogGazinSeen: false,
+  soldIds: [],
   weeklyPrepGained: 0,
   phase: 'playing', // 'playing','won','lost'
   sequencePlaying: false, // true during timed animations — suppresses new event triggers
@@ -855,7 +856,11 @@ function generateListings() {
   const count = 4;
   // Include Amish items ~50% of the time
   const includeAmish = Math.random() < 0.50;
-  const pool = ITEMS.filter(item => !item.amish || includeAmish);
+  const ownedOrSold = new Set([
+    ...G.inventory.map(i => i.id),
+    ...(G.soldIds || []),
+  ]);
+  const pool = ITEMS.filter(item => (!item.amish || includeAmish) && !ownedOrSold.has(item.id));
   // shuffle
   for(let i=pool.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -1779,6 +1784,7 @@ function cmdSell(idx) {
       const profit = sellPrice - item.paidPrice;
       G.money += sellPrice;
       G.totalProfit += profit;
+      if(item.id) G.soldIds.push(item.id);
       totalRevenue += sellPrice;
       totalProfit += profit;
       print(`  💸 SOLD: ${item.emoji} ${item.name} — Paid $${money(item.paidPrice)} → $${money(sellPrice)} (${profit >= 0 ? '+' : ''}$${money(profit)})`, profit >= 0 ? 'money' : 'error');
@@ -1802,6 +1808,7 @@ function cmdSell(idx) {
 
   G.money += sellPrice;
   G.totalProfit += profit;
+  if(item.id) G.soldIds.push(item.id);
   G.inventory.splice(i, 1);
   G.energy = Math.max(0, G.energy - 10);
 
