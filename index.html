@@ -956,7 +956,8 @@ function afterAction() {
   // Auto-advance week after maxActionsPerWeek actions with no blocking event.
   // Guard !autoAdvanceTimer is critical: without it, a tap during the 1800ms window
   // schedules a second timer. timerA fires → week advances → timerB still fires → double-advance.
-  if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer) {
+  const _inBrowse = typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action');
+  if(G.actionsTaken >= G.maxActionsPerWeek && !G.pendingEvent && G.phase === 'playing' && !autoAdvanceTimer && !_inBrowse) {
     printBlank();
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     print('  📅 Week ' + G.week + ' done. Matt calls it. Auto-advancing...', 'system');
@@ -1179,22 +1180,21 @@ function rollRandomEvent() {
 
   const t = G.totalActionsTaken;
 
-  // Tiers fire at actions 8, 16, 24, 32, 40, 47
-  // Tiers 1-2 are flavor and can fire while browsing; 3-6 block — skip if in listings
+  // Never interrupt while user is choosing from listings
   const inListings = typeof btnCtx !== 'undefined' && (btnCtx.mode === 'listings' || btnCtx.mode === 'listing-action');
+  if(inListings) return;
 
   const tiers = [
-    { action: 8,  key: G.t1Event, flavor: true  },
-    { action: 16, key: G.t2Event, flavor: true  },
-    { action: 24, key: G.t3Event, flavor: false },
-    { action: 32, key: G.t4Event, flavor: false },
-    { action: 40, key: G.t5Event, flavor: false },
-    { action: 47, key: G.t6Event, flavor: false },
+    { action: 8,  key: G.t1Event },
+    { action: 16, key: G.t2Event },
+    { action: 24, key: G.t3Event },
+    { action: 32, key: G.t4Event },
+    { action: 40, key: G.t5Event },
+    { action: 47, key: G.t6Event },
   ];
 
   for(const tier of tiers) {
     if(t >= tier.action && !G[_evtSeen[tier.key]]) {
-      if(!tier.flavor && inListings) return; // wait until out of listings
       _evtFire[tier.key]();
       return;
     }
@@ -2931,7 +2931,7 @@ function renderButtons() {
         addBtn(panel, `📉 LOWBALL (~$${money(minLowball)}+)`, `lowball ${n}`, 'btn-lowball', null, `lowball ${item.name}`);
       }
       // If can't afford to lowball, no action buttons — just back
-      addBtn(panel, '← BACK', null, 'btn-back', () => {
+      addBtn(panel, '← PASS', null, 'btn-back', () => {
         btnCtx.mode = 'listings'; btnCtx.selectedListing = null; renderButtons();
       });
       return;
@@ -2950,7 +2950,7 @@ function renderButtons() {
         renderButtons();
       });
     });
-    addBtn(panel, '← BACK', null, 'btn-back', () => {
+    addBtn(panel, '← PASS', null, 'btn-back', () => {
       btnCtx.mode = 'default'; renderButtons();
     });
     return;
