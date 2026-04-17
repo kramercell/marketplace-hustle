@@ -1,0 +1,4 @@
+[submodule "2fa"]
+	path = 2fa
+	url = https://github.com/kramercell/2fa-hustle.git
+	branch = retro-terminal-style
