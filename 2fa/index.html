@@ -474,6 +474,7 @@ let ac;
 function tone(f, d, type = 'sine', v = .1) {
   try {
     if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
     const o = ac.createOscillator(), g = ac.createGain();
     o.connect(g); g.connect(ac.destination);
     o.type = type; o.frequency.value = f;
