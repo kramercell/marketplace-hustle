@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2FA Hustle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:    #0a0a0a;
+  --surf:  #001200;
+  --surf2: #001a00;
+  --bdr:   #00aa22;
+  --pri:   #00ff41;
+  --ok:    #00ff41;
+  --bad:   #ff3333;
+  --warn:  #ffcc00;
+  --txt:   #00ff41;
+  --dim:   #007a1a;
+}
+
+body {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  background: var(--bg);
+  color: var(--txt);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CRT scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+.screen { display: none; flex-direction: column; align-items: center; gap: 24px; padding: 20px; }
+.screen.active { display: flex; }
+
+/* ── Shortcut badge (desktop only) ── */
+.sk {
+  display: inline-block;
+  background: transparent;
+  border: 1px solid var(--dim);
+  border-radius: 2px;
+  font-size: .65rem;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  padding: 1px 6px;
+  margin-right: 5px;
+  color: var(--dim);
+  vertical-align: 1px;
+  transition: background .12s, border-color .12s, color .12s;
+  user-select: none;
+}
+body.mobile .sk { display: none; }
+
+/* ── Brand ── */
+.brand { text-align: center; }
+.brand h1 {
+  font-family: 'VT323', monospace;
+  font-size: 4rem;
+  font-weight: 400;
+  letter-spacing: 4px;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(0,255,65,.8), 0 0 40px rgba(0,255,65,.4);
+}
+.brand h1 em { color: var(--pri); font-style: normal; }
+.brand p { color: var(--dim); margin-top: 6px; font-size: .9rem; letter-spacing: 1px; }
+
+/* ── Difficulty cards ── */
+.modes { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; max-width: 740px; }
+.mc {
+  background: var(--surf);
+  border: 1px solid var(--bdr);
+  padding: 22px 20px;
+  width: 160px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.mc:hover,
+.mc.selected {
+  border-color: var(--pri);
+  background: rgba(0,255,65,.06);
+  box-shadow: 0 0 16px rgba(0,255,65,.3), inset 0 0 16px rgba(0,255,65,.04);
+}
+.mc.selected .sk,
+.btn.selected .sk { background: var(--pri); border-color: var(--pri); color: #000; }
+.mc .icon { font-size: 1.6rem; margin-bottom: 8px; }
+.mc .name { font-family: 'VT323', monospace; font-size: 1.4rem; margin-bottom: 4px; letter-spacing: 1px; }
+.mc .desc { font-size: .75rem; color: var(--dim); line-height: 1.45; }
+
+/* Mobile: 2-up card grid */
+body.mobile .modes { max-width: 360px; gap: 12px; }
+body.mobile .mc { width: calc(50% - 6px); padding: 18px 14px; }
+body.mobile .mc .icon { font-size: 1.4rem; }
+body.mobile .brand h1 { font-size: 3rem; }
+
+.hint { color: var(--dim); font-size: .78rem; text-align: center; line-height: 1.8; letter-spacing: .5px; }
+.hint strong { color: var(--txt); }
+body.mobile .desktop-hint { display: none; }
+
+/* ── HUD ── */
+.hud {
+  display: flex;
+  gap: 20px;
+  background: var(--surf);
+  border: 1px solid var(--bdr);
+  padding: 10px 22px;
+  box-shadow: 0 0 10px rgba(0,255,65,.15);
+}
+.hs { text-align: center; min-width: 52px; }
+.hs .v {
+  font-family: 'VT323', monospace;
+  font-size: 1.8rem;
+  line-height: 1.1;
+  text-shadow: 0 0 8px rgba(0,255,65,.6);
+}
+.hs .l { font-size: .6rem; text-transform: uppercase; letter-spacing: 2px; color: var(--dim); margin-top: 2px; }
+
+/* ── 2FA code display ── */
+.tfa-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.tfa-label { font-size: .7rem; text-transform: uppercase; letter-spacing: 3px; color: var(--dim); }
+.tfa-boxes { display: flex; gap: 9px; }
+.tfa-box {
+  width: 52px; height: 66px;
+  background: var(--surf);
+  border: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'VT323', monospace;
+  font-size: 2.4rem;
+  transition: border-color .1s, background .1s, transform .08s, color .1s, box-shadow .1s;
+}
+.tfa-box.active {
+  border-color: var(--pri);
+  box-shadow: 0 0 14px rgba(0,255,65,.5), inset 0 0 8px rgba(0,255,65,.1);
+  transform: scale(1.06);
+  animation: blink-cursor .7s step-end infinite;
+}
+.tfa-box.done   { border-color: var(--ok); color: var(--ok); text-shadow: 0 0 8px rgba(0,255,65,.6); }
+.tfa-box.error  { border-color: var(--bad); background: rgba(255,51,51,.1); color: var(--bad); transform: scale(.94); }
+
+.tfa-hint { font-size: .82rem; color: var(--dim); min-height: 1.2em; text-align: center; letter-spacing: .5px; }
+.tfa-hint.go { color: var(--pri); animation: pulse .7s infinite; text-shadow: 0 0 8px rgba(0,255,65,.6); }
+.tfa-tip  { font-size: .72rem; color: var(--dim); text-align: center; opacity: .7; letter-spacing: .5px; }
+
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+@keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
+@keyframes blink-cursor { 0%,100% { box-shadow: 0 0 14px rgba(0,255,65,.5), inset 0 0 8px rgba(0,255,65,.1); } 50% { box-shadow: 0 0 4px rgba(0,255,65,.2); } }
+
+/* Mobile code box sizing */
+@media (max-width: 420px) {
+  .tfa-box { width: 44px; height: 58px; font-size: 2rem; }
+  .tfa-boxes { gap: 7px; }
+}
+
+/* ── NumPad ── */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 82px);
+  grid-template-rows: repeat(3, 70px) 62px 52px;
+  gap: 8px;
+}
+.nk {
+  background: var(--surf);
+  border: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'VT323', monospace;
+  font-size: 1.9rem;
+  user-select: none;
+  touch-action: manipulation; cursor: pointer;
+  transition: background .08s, border-color .08s, transform .06s, box-shadow .08s, color .08s;
+  color: var(--txt);
+}
+.nk:hover { background: rgba(0,255,65,.06); box-shadow: 0 0 8px rgba(0,255,65,.2); }
+.nk[data-d="0"] { grid-column: 1 / 4; }
+.nk[data-d="↵"] { grid-column: 1 / 4; font-size: 1.3rem; letter-spacing: 2px; }
+.nk.tgt  { border-color: var(--pri); box-shadow: 0 0 20px rgba(0,255,65,.6); color: var(--pri); animation: blink 1s step-end infinite; }
+.nk.hit  { background: rgba(0,255,65,.2); border-color: var(--ok); color: var(--ok); transform: scale(.93); }
+.nk.miss { background: rgba(255,51,51,.15); border-color: var(--bad); color: var(--bad); transform: scale(.93); }
+
+/* Mobile: larger tap targets */
+body.mobile .numpad {
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 82px) 72px 60px;
+  gap: 10px;
+}
+body.mobile .nk { cursor: pointer; touch-action: manipulation; font-size: 2.2rem; }
+body.mobile .nk[data-d="↵"] { font-size: 1.5rem; }
+body.mobile .nk:active { transform: scale(.92); background: rgba(0,255,65,.12); }
+
+@media (max-width: 380px) {
+  body.mobile .numpad {
+    grid-template-columns: repeat(3, 88px);
+    grid-template-rows: repeat(3, 74px) 64px 54px;
+    gap: 8px;
+  }
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 11px 28px;
+  border: 1px solid var(--bdr);
+  background: transparent;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: .9rem;
+  color: var(--txt);
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: box-shadow .15s, border-color .15s, background .15s, transform .1s;
+}
+.btn:hover  { border-color: var(--pri); box-shadow: 0 0 12px rgba(0,255,65,.4); background: rgba(0,255,65,.05); transform: translateY(-1px); }
+.btn:active { transform: none; }
+.btn-pri   { border-color: var(--pri); box-shadow: 0 0 10px rgba(0,255,65,.3); color: var(--pri); }
+.btn-ghost { border-color: var(--bdr); color: var(--dim); }
+.btn-ghost:hover { color: var(--txt); }
+.btn-row   { display: flex; gap: 12px; }
+.btn.selected { border-color: var(--pri); box-shadow: 0 0 12px rgba(0,255,65,.5); color: var(--pri); }
+
+/* Mobile peek button */
+#peekBtn {
+  display: none;
+  width: 100%;
+  max-width: 322px;
+  padding: 14px;
+  font-size: .95rem;
+  touch-action: manipulation;
+}
+#peekBtn:disabled { opacity: .3; }
+
+/* ── Results ── */
+.res-title {
+  font-family: 'VT323', monospace;
+  font-size: 3rem;
+  font-weight: 400;
+  text-align: center;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(0,255,65,.7);
+}
+.res-sub   { color: var(--dim); font-size: .82rem; text-align: center; margin-top: -18px; letter-spacing: 1px; }
+.sg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 300px; }
+.sc { background: var(--surf); border: 1px solid var(--bdr); padding: 16px 12px; text-align: center; }
+.sc .sv { font-family: 'VT323', monospace; font-size: 2.4rem; color: var(--pri); text-shadow: 0 0 10px rgba(0,255,65,.5); }
+.sc .sl { font-size: .62rem; text-transform: uppercase; letter-spacing: 2px; color: var(--dim); margin-top: 2px; }
+
+body.mobile .btn-row { flex-direction: column; width: 100%; max-width: 300px; }
+body.mobile .btn-row .btn { width: 100%; padding: 16px; font-size: 1rem; }
+
+/* ── Overlays ── */
+#flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .06s; }
+#flash.ok   { background: rgba(0,255,65,.06); }
+#flash.bad  { background: rgba(255,51,51,.1); }
+#flash.show { opacity: 1; }
+
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--surf); border: 1px solid var(--bdr);
+  padding: 10px 20px; font-size: .82rem; color: var(--warn);
+  transition: transform .3s; white-space: nowrap; z-index: 10;
+  letter-spacing: .5px;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Leaderboard modal ── */
+#lb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#lb-overlay.open { display: flex; }
+
+#lb-box {
+  background: var(--bg);
+  border: 1px solid var(--pri);
+  box-shadow: 0 0 40px rgba(0,255,65,.3), inset 0 0 40px rgba(0,255,65,.02);
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#lb-box h2 {
+  font-family: 'VT323', monospace;
+  font-size: 2.4rem;
+  letter-spacing: 6px;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(0,255,65,.7);
+}
+
+#lb-top3 { display: flex; gap: 10px; justify-content: center; }
+.lb-podium {
+  flex: 1; max-width: 170px;
+  background: var(--surf);
+  border: 1px solid var(--bdr);
+  padding: 14px 10px;
+  text-align: center;
+}
+.lb-podium.rank-1 { border-color: var(--pri); box-shadow: 0 0 16px rgba(0,255,65,.25); }
+.lb-podium .lb-medal { font-size: 1.4rem; }
+.lb-podium .lb-pname { font-family: 'VT323', monospace; font-size: 1.3rem; letter-spacing: 1px; margin-top: 4px; word-break: break-all; }
+.lb-podium .lb-pstat { font-size: .68rem; color: var(--dim); margin-top: 2px; }
+
+#lb-name-row { display: flex; gap: 8px; }
+#lb-name {
+  flex: 1;
+  background: var(--surf);
+  border: 1px solid var(--bdr);
+  color: var(--txt);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .9rem;
+  padding: 10px 14px;
+  outline: none;
+  letter-spacing: 1px;
+}
+#lb-name:focus { border-color: var(--pri); box-shadow: 0 0 10px rgba(0,255,65,.3); }
+#lb-name::placeholder { color: var(--dim); }
+
+#lb-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+#lb-table th {
+  font-size: .58rem; letter-spacing: 2px; color: var(--dim);
+  text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bdr);
+}
+#lb-table td { padding: 8px 8px; border-bottom: 1px solid rgba(0,170,34,.18); vertical-align: middle; }
+#lb-table tr.lb-me td { color: var(--pri); text-shadow: 0 0 6px rgba(0,255,65,.4); }
+#lb-table tr:last-child td { border-bottom: none; }
+.lb-rank { color: var(--dim); width: 28px; }
+.lb-diff-badge {
+  font-size: .62rem; border: 1px solid var(--bdr);
+  padding: 1px 5px; color: var(--dim); letter-spacing: 1px; white-space: nowrap;
+}
+.lb-diff-badge.hustler { border-color: var(--pri); color: var(--pri); }
+.lb-diff-badge.hard    { border-color: #ffcc00; color: #ffcc00; }
+
+#lb-status { font-size: .78rem; color: var(--dim); text-align: center; min-height: 1.2em; letter-spacing: .5px; }
+
+#lb-preview { font-size: .75rem; color: var(--dim); text-align: center; letter-spacing: .5px; line-height: 1.9; }
+
+#lb-close { align-self: center; }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+<div id="toast"></div>
+
+<!-- ═══ HOME ═══ -->
+<div class="screen active" id="s-home">
+  <div class="brand">
+    <h1>2FA <em>Hustle</em></h1>
+    <p>never locked out</p>
+  </div>
+  <div class="modes">
+    <div class="mc" data-shortcut="1" onclick="startTfa(Infinity)">
+      <div class="icon">👀</div>
+      <div class="name"><span class="sk">1</span>Easy</div>
+      <div class="desc">Code stays visible the whole time.</div>
+    </div>
+    <div class="mc" data-shortcut="2" onclick="startTfa(3000)">
+      <div class="icon">⏱</div>
+      <div class="name"><span class="sk">2</span>Medium</div>
+      <div class="desc">Code hides after 3 seconds.</div>
+    </div>
+    <div class="mc" data-shortcut="3" onclick="startTfa(1000)">
+      <div class="icon">⚡</div>
+      <div class="name"><span class="sk">3</span>Hard</div>
+      <div class="desc">Code hides after 1 second.</div>
+    </div>
+    <div class="mc" data-shortcut="4" onclick="startTfa(400)">
+      <div class="icon">🔥</div>
+      <div class="name"><span class="sk">4</span>Hustler</div>
+      <div class="desc">Code hides after 0.4 seconds. Good luck.</div>
+    </div>
+  </div>
+  <div id="lb-preview-home"></div>
+  <button class="btn btn-ghost" onclick="lbOpen()">[ Leaderboard ]</button>
+  <p class="hint desktop-hint">
+    <strong>NumPad keys only</strong> &nbsp;·&nbsp; NumLock must be ON<br>
+    NumPad 1–4 then <strong>↵ Enter</strong> to select
+  </p>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div class="screen" id="s-game">
+  <div class="hud">
+    <div class="hs"><div class="v" id="hCode">0/8</div><div class="l">Code</div></div>
+    <div class="hs"><div class="v" id="hErrors">0</div><div class="l">Errors</div></div>
+    <div class="hs"><div class="v" id="hAvg">—</div><div class="l">Avg</div></div>
+  </div>
+  <div class="tfa-wrap">
+    <div class="tfa-label" id="tfaLabel">Code 1 of 8</div>
+    <div class="tfa-boxes" id="tfaBoxes"></div>
+    <div class="tfa-hint" id="tfaHint"></div>
+    <div class="tfa-tip" id="tfaTip">Press <span class="sk">*</span> to peek &nbsp;·&nbsp; <span class="sk">Esc</span> to quit</div>
+  </div>
+  <div class="numpad" id="numpad"></div>
+  <button id="peekBtn" class="btn btn-ghost" onclick="triggerPeek()">👁 Peek at code</button>
+  <button class="btn btn-ghost" onclick="quit()">Quit</button>
+</div>
+
+<!-- ═══ RESULTS ═══ -->
+<div class="screen" id="s-results">
+  <div class="res-title" id="resTitle">All codes done!</div>
+  <div class="res-sub" id="resSub"></div>
+  <div class="sg" id="statsGrid"></div>
+  <div id="lb-preview"></div>
+  <div class="btn-row">
+    <button class="btn btn-pri" id="btnAgain" data-shortcut="1"><span class="sk">1</span>Play Again</button>
+    <button class="btn btn-ghost" data-shortcut="2" onclick="lbOpen()"><span class="sk">2</span>Leaderboard</button>
+    <button class="btn btn-ghost" data-shortcut="3" onclick="showHome()"><span class="sk">3</span>Home</button>
+  </div>
+  <p class="hint desktop-hint">NumPad 1–3 then <strong>↵ Enter</strong> to select</p>
+</div>
+
+<!-- ═══ LEADERBOARD MODAL ═══ -->
+<div id="lb-overlay">
+  <div id="lb-box">
+    <h2>[ LEADERBOARD ]</h2>
+    <div id="lb-top3"></div>
+    <div id="lb-name-row">
+      <input id="lb-name" type="text" maxlength="20" placeholder="Enter your name to submit...">
+      <button class="btn btn-pri" id="lb-submit" onclick="lbSubmit()">Submit</button>
+    </div>
+    <table id="lb-table">
+      <thead><tr>
+        <th>#</th><th>NAME</th><th>DIFF</th><th>INPUT</th><th>CODES</th><th>TOTAL</th><th>AVG</th><th>ERR</th><th>PEEKS</th><th>DATE</th>
+      </tr></thead>
+      <tbody id="lb-rows"></tbody>
+    </table>
+    <div id="lb-status">Loading...</div>
+    <p class="hint" style="font-size:.65rem">Ranked by: total time + 2s per error + 5s per peek &nbsp;·&nbsp; 8/8 runs only</p>
+    <button class="btn btn-ghost" id="lb-close" onclick="lbClose()">← Back</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+'use strict';
+
+// ── Mobile detection ──────────────────────────────────────────────────────────
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
+
+if (isMobile) document.body.classList.add('mobile');
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+let ac;
+function tone(f, d, type = 'sine', v = .1) {
+  try {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(v, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + d);
+    o.start(); o.stop(ac.currentTime + d);
+  } catch (_) {}
+}
+const sfx = {
+  ok:     () => tone(880, .08, 'sine', .12),
+  bad:    () => { tone(200, .06, 'sawtooth', .1); tone(160, .12, 'sawtooth', .07); },
+  codeOk: () => { [659,784,1047].forEach((f,i) => setTimeout(() => tone(f,.1,'sine',.1), i*55)); },
+  done:   () => [523,659,784,1047].forEach((f,i) => setTimeout(() => tone(f,.15,'sine',.1), i*90)),
+};
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const PAD = ['7','8','9','4','5','6','1','2','3','0','↵'];
+
+const CODE_TO = {
+  Numpad0:'0', Numpad1:'1', Numpad2:'2', Numpad3:'3', Numpad4:'4',
+  Numpad5:'5', Numpad6:'6', Numpad7:'7', Numpad8:'8', Numpad9:'9',
+  NumpadEnter:'↵',
+};
+
+const ROW_CODES = new Set([
+  'Digit0','Digit1','Digit2','Digit3','Digit4',
+  'Digit5','Digit6','Digit7','Digit8','Digit9',
+  'Enter', 'Period',
+]);
+
+const DIFF_LABEL = { [Infinity]: 'Easy', 3000: 'Medium', 1000: 'Hard', 400: 'Hustler' };
+
+// ── Screen navigation ─────────────────────────────────────────────────────────
+let screenKeyHandler = null;
+
+function clearNavHighlight() {
+  document.querySelectorAll('.mc.selected, .btn.selected')
+    .forEach(el => el.classList.remove('selected'));
+}
+
+function makeNavHandler(screenId, actions, defaultKey = null) {
+  let pending = defaultKey;
+  if (defaultKey) {
+    const el = document.getElementById(screenId).querySelector(`[data-shortcut="${defaultKey}"]`);
+    if (el) el.classList.add('selected');
+  }
+  return function(e) {
+    if (e.code === 'NumpadEnter') {
+      const action = pending ? actions[pending] : null;
+      clearNavHighlight();
+      pending = null;
+      if (action) action();
+      return;
+    }
+    const digit = CODE_TO[e.code];
+    if (digit && actions[digit]) {
+      clearNavHighlight();
+      pending = digit;
+      const el = document.getElementById(screenId).querySelector(`[data-shortcut="${digit}"]`);
+      if (el) el.classList.add('selected');
+    }
+  };
+}
+
+function show(id) {
+  if (screenKeyHandler) {
+    document.removeEventListener('keydown', screenKeyHandler);
+    screenKeyHandler = null;
+  }
+  clearNavHighlight();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showHome() {
+  show('s-home');
+  lbLoadPreview();
+  if (!isMobile) {
+    screenKeyHandler = makeNavHandler('s-home', {
+      '1': () => startTfa(Infinity),
+      '2': () => startTfa(3000),
+      '3': () => startTfa(1000),
+      '4': () => startTfa(400),
+    });
+    document.addEventListener('keydown', screenKeyHandler);
+  }
+}
+
+function showResults(againFn) {
+  show('s-results');
+  document.getElementById('btnAgain').onclick = againFn;
+  if (!isMobile) {
+    screenKeyHandler = makeNavHandler('s-results', {
+      '1': againFn,
+      '2': () => lbOpen(),
+      '3': () => showHome(),
+    }, '1');
+    document.addEventListener('keydown', screenKeyHandler);
+  }
+}
+
+// ── Game state ────────────────────────────────────────────────────────────────
+let G = {};
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function makeCodes(count) {
+  return Array.from({ length: count }, () =>
+    String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
+  );
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+let flashTimer;
+function doFlash(cls) {
+  const el = document.getElementById('flash');
+  el.className = cls + ' show';
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.classList.remove('show'), 130);
+}
+
+// ── NumPad visual ─────────────────────────────────────────────────────────────
+function buildPad() {
+  const el = document.getElementById('numpad');
+  el.innerHTML = '';
+  PAD.forEach(d => {
+    const k = document.createElement('div');
+    k.className = 'nk';
+    k.dataset.d = d;
+    k.textContent = d === '↵' ? '↵ Enter' : d;
+    el.appendChild(k);
+  });
+}
+
+function setKey(digit, cls) {
+  const k = document.querySelector(`.nk[data-d="${digit}"]`);
+  if (!k) return;
+  k.classList.remove('tgt', 'hit', 'miss');
+  if (cls) k.classList.add(cls);
+}
+
+function clearPad() { PAD.forEach(d => setKey(d, null)); }
+
+// ── HUD ───────────────────────────────────────────────────────────────────────
+function hudUpdate() {
+  document.getElementById('hCode').textContent   = `${G.codesCompleted}/8`;
+  document.getElementById('hErrors').textContent = G.totalErrors;
+  const avg = G.codeTimes.length
+    ? (G.codeTimes.reduce((a, b) => a + b, 0) / G.codeTimes.length / 1000).toFixed(1) + 's'
+    : '—';
+  document.getElementById('hAvg').textContent = avg;
+}
+
+// ── 2FA helpers ───────────────────────────────────────────────────────────────
+function buildTfaBoxes(code) {
+  const container = document.getElementById('tfaBoxes');
+  container.innerHTML = '';
+  code.split('').forEach((digit, i) => {
+    const box = document.createElement('div');
+    box.className = 'tfa-box';
+    box.dataset.idx = i;
+    box.dataset.digit = digit;
+    box.textContent = digit;
+    container.appendChild(box);
+  });
+}
+
+function updateTfaBoxes() {
+  document.querySelectorAll('.tfa-box').forEach((box, i) => {
+    const digit = box.dataset.digit;
+    box.classList.remove('done', 'active', 'error');
+    if (i < G.typed.length) {
+      box.classList.add('done');
+      box.textContent = digit;
+    } else if (i === G.typed.length && !G.waitEnter) {
+      box.classList.add('active');
+      box.textContent = G.codeVisible ? digit : '·';
+    } else {
+      box.textContent = G.codeVisible ? digit : '·';
+    }
+  });
+  updatePeekBtn();
+}
+
+function flashTfaError() {
+  document.querySelectorAll('.tfa-box').forEach((box, i) => {
+    if (i <= G.typed.length) {
+      box.classList.remove('done', 'active');
+      box.classList.add('error');
+      setTimeout(() => box.classList.remove('error'), 380);
+    }
+  });
+}
+
+function updatePeekBtn() {
+  const btn = document.getElementById('peekBtn');
+  if (!isMobile || !isFinite(G.visibleMs) || G.waitEnter) {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = '';
+  btn.disabled = G.codeVisible;
+}
+
+function nextCode() {
+  G.typed       = '';
+  G.waitEnter   = false;
+  G.codeVisible = true;
+  G.codeStart   = Date.now();
+  clearTimeout(G.hideTimer);
+  clearPad();
+
+  buildTfaBoxes(G.codes[G.codeIdx]);
+  updateTfaBoxes();
+
+  if (isFinite(G.visibleMs)) {
+    G.hideTimer = setTimeout(() => {
+      G.codeVisible = false;
+      updateTfaBoxes();
+    }, G.visibleMs);
+  }
+
+  document.getElementById('tfaLabel').textContent = `Code ${G.codeIdx + 1} of ${G.codes.length}`;
+  const hint = document.getElementById('tfaHint');
+  hint.textContent = '';
+  hint.className = 'tfa-hint';
+  hudUpdate();
+}
+
+// ── Core input logic (shared by keyboard + tap) ───────────────────────────────
+function processDigit(digit) {
+  if (!G.active || G.waitEnter) return;
+
+  if (digit === G.codes[G.codeIdx][G.typed.length]) {
+    if (isFinite(G.visibleMs)) {
+      clearTimeout(G.hideTimer);
+      G.codeVisible = false;
+    }
+    G.typed += digit;
+    setKey(digit, 'hit');
+    setTimeout(() => setKey(digit, null), 150);
+    updateTfaBoxes();
+    sfx.ok();
+
+    if (G.typed.length === 6) {
+      G.waitEnter   = true;
+      G.codeVisible = true;
+      updateTfaBoxes();
+      clearPad();
+      setKey('↵', 'tgt');
+      const hint = document.getElementById('tfaHint');
+      hint.textContent = isMobile ? 'Tap ↵ Enter to confirm' : '↵ Enter to confirm';
+      hint.className = 'tfa-hint go';
+    }
+  } else {
+    G.totalErrors++;
+    setKey(digit, 'miss');
+    setTimeout(() => setKey(digit, null), 300);
+    flashTfaError();
+    doFlash('bad');
+    sfx.bad();
+    setTimeout(() => {
+      G.typed = '';
+      if (G.active && !G.waitEnter) updateTfaBoxes();
+    }, 380);
+  }
+}
+
+function processEnter() {
+  if (!G.active) return;
+
+  if (!G.waitEnter) {
+    doFlash('bad');
+    sfx.bad();
+    const hint = document.getElementById('tfaHint');
+    hint.textContent = isMobile ? 'Finish the code first' : 'Finish the code first';
+    hint.className = 'tfa-hint';
+    return;
+  }
+
+  clearTimeout(G.hideTimer);
+  G.codeTimes.push(Date.now() - G.codeStart);
+  G.codesCompleted++;
+  clearPad();
+  setKey('↵', 'hit');
+  doFlash('ok');
+  sfx.codeOk();
+  hudUpdate();
+  G.codeIdx++;
+  if (G.codeIdx >= G.codes.length) setTimeout(() => endGame(), 500);
+  else setTimeout(() => nextCode(), 500);
+}
+
+function triggerPeek() {
+  if (!G.active || G.waitEnter || G.codeVisible) return;
+  G.peeks++;
+  G.codeVisible = true;
+  updateTfaBoxes();
+  const hint = document.getElementById('tfaHint');
+  hint.textContent = `👁 Peeked ×${G.peeks}`;
+  hint.className = 'tfa-hint';
+  clearTimeout(G.hideTimer);
+  G.hideTimer = setTimeout(() => {
+    G.codeVisible = false;
+    updateTfaBoxes();
+  }, G.visibleMs);
+}
+
+// ── Mobile tap handler ────────────────────────────────────────────────────────
+function tapKey(digit) {
+  if (digit === '↵') processEnter();
+  else processDigit(digit);
+}
+
+// ── Desktop keyboard handler ──────────────────────────────────────────────────
+function onKey(e) {
+  if (!G.active) return;
+
+  if (ROW_CODES.has(e.code)) {
+    toast('Use your NumPad keys — not the regular keyboard!');
+    return;
+  }
+
+  if (e.code === 'Escape') {
+    quit();
+    return;
+  }
+
+  if (e.code === 'NumpadMultiply') {
+    e.preventDefault();
+    triggerPeek();
+    return;
+  }
+
+  const digit = CODE_TO[e.code];
+  if (!digit) return;
+  e.preventDefault();
+
+  if (digit === '↵') processEnter();
+  else processDigit(digit);
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+function startTfa(visibleMs) {
+  G = {
+    active: true, visibleMs,
+    codesCompleted: 0, totalErrors: 0, peeks: 0,
+    codeTimes: [], codeStart: null,
+    codes: makeCodes(8), codeIdx: 0,
+    typed: '', waitEnter: false,
+    codeVisible: true, hideTimer: null,
+    startTime: Date.now(),
+  };
+
+  document.getElementById('tfaTip').style.display =
+    (!isMobile && isFinite(visibleMs)) ? '' : 'none';
+
+  buildPad();
+  hudUpdate();
+  show('s-game');
+  nextCode();
+
+  if (!isMobile) document.addEventListener('keydown', onKey);
+}
+
+// ── Quit / End ────────────────────────────────────────────────────────────────
+function quit() { endGame(true); }
+
+function endGame(aborted = false) {
+  if (!G.active) return;
+  G.active = false;
+  clearTimeout(G.hideTimer);
+  document.removeEventListener('keydown', onKey);
+  clearPad();
+
+  if (aborted) { showHome(); return; }
+
+  sfx.done();
+
+  const elapsed   = (Date.now() - G.startTime) / 1000;
+  const diffLabel = DIFF_LABEL[G.visibleMs] ?? G.visibleMs + 'ms';
+  const avgTime   = G.codeTimes.length
+    ? (G.codeTimes.reduce((a, b) => a + b, 0) / G.codeTimes.length / 1000).toFixed(1) + 's'
+    : '—';
+  const bestTime  = G.codeTimes.length
+    ? (Math.min(...G.codeTimes) / 1000).toFixed(1) + 's'
+    : '—';
+
+  document.getElementById('resTitle').textContent = G.codesCompleted === 8 ? 'All codes done!' : `${G.codesCompleted}/8 codes`;
+  document.getElementById('resSub').textContent   = `${diffLabel} · best ${bestTime} · ${elapsed.toFixed(0)}s total`;
+  document.getElementById('statsGrid').innerHTML  = [
+    { v: G.codesCompleted + '/8', l: 'Codes Done' },
+    { v: avgTime,                 l: 'Avg / Code' },
+    { v: G.totalErrors,           l: 'Mis-entries' },
+    { v: G.peeks,                 l: 'Peeks' },
+  ].map(s => `<div class="sc"><div class="sv">${s.v}</div><div class="sl">${s.l}</div></div>`).join('');
+
+  _lbScore = {
+    difficulty:      diffLabel,
+    codesCompleted:  G.codesCompleted,
+    totalTime:       Date.now() - G.startTime,
+    avgTime:         G.codeTimes.length ? Math.round(G.codeTimes.reduce((a,b) => a+b,0) / G.codeTimes.length) : 0,
+    errors:          G.totalErrors,
+    peeks:           G.peeks,
+    input:           isMobile ? 'touch' : 'keyboard',
+    ts:              G.startTime,
+  };
+  _lbSubmitted = false;
+
+  const savedVisibleMs = G.visibleMs;
+  showResults(() => startTfa(savedVisibleMs));
+  lbLoadPreview();
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+let _lbScore     = null;
+let _lbSubmitted = false;
+let _lbFetchPromise = null;
+let _db;
+
+try {
+  firebase.initializeApp({
+    apiKey:      'AIzaSyBq3LDZTna09kYLSjIkrSUurzZGBhv5ECs',
+    databaseURL: 'https://marketplace-hustle-default-rtdb.firebaseio.com',
+    projectId:   'marketplace-hustle',
+    appId:       '1:398454446890:web:f3ad5452eeb38036915c53',
+  });
+  _db = firebase.database();
+} catch(e) { console.warn('Firebase init failed', e); }
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+function fmtTime(ms) { return (ms / 1000).toFixed(1) + 's'; }
+
+function diffBadge(diff) {
+  const cls = diff === 'Hustler' ? 'hustler' : diff === 'Hard' ? 'hard' : '';
+  return `<span class="lb-diff-badge ${cls}">${escHtml(diff)}</span>`;
+}
+
+function lbRankScore(r) {
+  // Lower = better. Penalise errors (2 s each) and peeks (5 s each).
+  return r.totalTime + (r.errors || 0) * 2000 + (r.peeks || 0) * 5000;
+}
+
+async function lbFetchAll(force) {
+  if (!_db) return [];
+  if (!_lbFetchPromise || force) {
+    _lbFetchPromise = _db.ref('scores_2fa').once('value').then(snap => {
+      const all = [];
+      snap.forEach(child => all.push({ key: child.key, ...child.val() }));
+      const byTs = {};
+      all.forEach(r => { if (!byTs[r.ts]) byTs[r.ts] = r; });
+      const rows = Object.values(byTs);
+      rows.sort((a, b) => {
+        const aFull = a.codesCompleted === 8, bFull = b.codesCompleted === 8;
+        if (aFull !== bFull) return aFull ? -1 : 1;
+        return aFull
+          ? lbRankScore(a) - lbRankScore(b)
+          : b.codesCompleted - a.codesCompleted || lbRankScore(a) - lbRankScore(b);
+      });
+      return rows;
+    });
+  }
+  return _lbFetchPromise;
+}
+
+async function lbLoad(force) {
+  const statusEl = document.getElementById('lb-status');
+  statusEl.textContent = 'Loading...';
+  let rows;
+  try { rows = await lbFetchAll(force); }
+  catch(e) { statusEl.textContent = 'Failed to load. Check connection.'; return; }
+
+  statusEl.textContent = rows.length === 0 ? 'No scores yet. Be the first!' : '';
+
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('lb-top3').innerHTML = rows.slice(0,3).map((r,i) => `
+    <div class="lb-podium ${i===0?'rank-1':''}">
+      <div class="lb-medal">${medals[i]}</div>
+      <div class="lb-pname">${escHtml(r.name||'—')}</div>
+      <div class="lb-pstat">${diffBadge(r.difficulty||'—')} &nbsp; ${r.input||'—'}</div>
+      <div class="lb-pstat">${r.codesCompleted}/8 &nbsp;·&nbsp; ${fmtTime(r.totalTime)}</div>
+      <div class="lb-pstat">${r.errors||0} err &nbsp;·&nbsp; ${r.peeks||0} peek</div>
+    </div>`).join('');
+
+  const myTs = _lbScore?.ts;
+  document.getElementById('lb-rows').innerHTML = rows.map((r,i) => `
+    <tr class="${r.ts===myTs && _lbSubmitted?'lb-me':''}">
+      <td class="lb-rank">${i<3?medals[i]:i+1}</td>
+      <td>${escHtml(r.name||'—')}</td>
+      <td>${diffBadge(r.difficulty||'—')}</td>
+      <td style="color:var(--dim);font-size:.7rem">${r.input||'—'}</td>
+      <td>${r.codesCompleted}/8</td>
+      <td>${fmtTime(r.totalTime)}</td>
+      <td>${fmtTime(r.avgTime||0)}</td>
+      <td>${r.errors??0}</td>
+      <td>${r.peeks??0}</td>
+      <td>${fmtDate(r.ts)}</td>
+    </tr>`).join('');
+}
+
+async function lbLoadPreview() {
+  if (!_db) return;
+  try {
+    const rows = await lbFetchAll(false);
+    const medals = ['🥇','🥈','🥉'];
+    const html = rows.length ? rows.slice(0,3).map((r,i) =>
+      `${medals[i]} ${escHtml(r.name||'—')} &nbsp; ${r.codesCompleted}/8 &nbsp; ${fmtTime(r.totalTime)} &nbsp; <span style="opacity:.6">${escHtml(r.difficulty||'')}</span>`
+    ).join('<br>') : '';
+    ['lb-preview','lb-preview-home'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    });
+  } catch(e) { /* silent */ }
+}
+
+function lbOpen() {
+  _lbSubmitted = false;
+  document.getElementById('lb-name').value = '';
+  document.getElementById('lb-submit').disabled = false;
+  document.getElementById('lb-name-row').style.display = _lbScore ? '' : 'none';
+  document.getElementById('lb-status').textContent = '';
+  document.getElementById('lb-overlay').classList.add('open');
+  lbLoad(true);
+}
+
+function lbClose() {
+  document.getElementById('lb-overlay').classList.remove('open');
+}
+
+async function lbSubmit() {
+  if (!_db || !_lbScore || _lbSubmitted) return;
+  const name = document.getElementById('lb-name').value.trim().slice(0,20);
+  if (!name) { document.getElementById('lb-status').textContent = 'Enter a name first.'; return; }
+  document.getElementById('lb-submit').disabled = true;
+  document.getElementById('lb-status').textContent = 'Submitting...';
+  try {
+    await _db.ref('scores_2fa').push({ ..._lbScore, name });
+    _lbSubmitted = true;
+    _lbScore = { ..._lbScore, name };
+    _lbFetchPromise = null;
+    document.getElementById('lb-name-row').style.display = 'none';
+    document.getElementById('lb-status').textContent = 'Score submitted!';
+    lbLoad(true);
+  } catch(e) {
+    document.getElementById('lb-status').textContent = 'Submit failed. Check connection.';
+    document.getElementById('lb-submit').disabled = false;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('numpad').addEventListener('pointerdown', function(e) {
+  const key = e.target.closest('.nk');
+  if (!key) return;
+  e.preventDefault();
+  tapKey(key.dataset.d);
+});
+
+buildPad();
+showHome();
+</script>
+</body>
+</html>
