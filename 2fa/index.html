@@ -30,6 +30,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation;
 }
 
 /* CRT scanline overlay */
@@ -936,11 +937,8 @@ async function lbFetchAll(force) {
   if (!_db) return [];
   if (!_lbFetchPromise || force) {
     _lbFetchPromise = _db.ref('scores_2fa').once('value').then(snap => {
-      const all = [];
-      snap.forEach(child => all.push({ key: child.key, ...child.val() }));
-      const byTs = {};
-      all.forEach(r => { if (!byTs[r.ts]) byTs[r.ts] = r; });
-      const rows = Object.values(byTs);
+      const rows = [];
+      snap.forEach(child => rows.push({ key: child.key, ...child.val() }));
       rows.sort((a, b) => {
         const aFull = a.codesCompleted === 8, bFull = b.codesCompleted === 8;
         if (aFull !== bFull) return aFull ? -1 : 1;
